@@ -1834,8 +1834,10 @@ function generarBono(){
       <div style="margin-top:12px;background:#1a0900;color:#F5C518;display:inline-block;padding:7px 16px;border-radius:9px;font-weight:800;letter-spacing:2px;font-size:.86rem;">${codigo}</div>
       <div style="font-size:.62rem;color:#999;margin-top:11px;line-height:1.4;">Válido en Girasoles Floristería · Turbo.<br>Presenta este código al hacer tu pedido.</div>
     </div>
-    <button onclick="compartirBono('${codigo}','${_esc(dn)}','${_esc(rn)}','${dt}')" style="margin-top:14px;width:100%;background:#25D366;color:#fff;border:none;border-radius:11px;padding:13px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;">📲 Enviar bono (imagen + mensaje)</button>
-    <button onclick="descargarBono('${codigo}','${_esc(dn)}','${_esc(rn)}')" style="margin-top:8px;width:100%;background:#fff7e0;color:#8a6010;border:1px solid #f0d890;border-radius:11px;padding:12px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">⬇️ Solo descargar imagen</button>
+    <div style="font-size:.64rem;color:#9a6f08;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:16px;margin-bottom:6px;">Enviar el bono</div>
+    <button onclick="enviarBonoWA('${dt}','${codigo}','${_esc(dn)}','${_esc(rn)}')" style="width:100%;background:#25D366;color:#fff;border:none;border-radius:11px;padding:13px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;">💬 Enviar al WhatsApp del cliente</button>
+    <button onclick="descargarBono('${codigo}','${_esc(dn)}','${_esc(rn)}')" style="margin-top:8px;width:100%;background:#fff7e0;color:#8a6010;border:1px solid #f0d890;border-radius:11px;padding:12px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">⬇️ Descargar imagen (para adjuntar)</button>
+    <button onclick="compartirBono('${codigo}','${_esc(dn)}','${_esc(rn)}','${dt}')" style="margin-top:8px;width:100%;background:#1a0900;color:#fff;border:none;border-radius:11px;padding:12px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">📲 Compartir imagen + mensaje</button>
     <button onclick="cerrarBono()" style="margin-top:8px;width:100%;background:#f3f3f1;color:#555;border:none;border-radius:11px;padding:11px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;">Cerrar</button>`;
 }
 function enviarBonoWA(tel, codigo, dn, rn){
