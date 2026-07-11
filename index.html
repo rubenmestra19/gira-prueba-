@@ -866,7 +866,8 @@ textarea{resize:vertical;min-height:62px}
       <div><label>Cliente</label><input type="text" id="c-cliente" placeholder="Nombre del cliente"></div>
       <div><label>Descuento ($)</label><input type="number" id="c-desc" placeholder="0" min="0" oninput="renderCot()"></div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:13px;">
+    <button class="btn bs" onclick="guardarCotizacion()" id="btn-cotizar" style="display:none;width:100%;margin-top:13px;">💰 Cotizar</button>
+    <div style="display:flex;gap:8px;margin-top:8px;">
       <button class="btn bs" onclick="abrirComprar()" id="btn-comprar" style="display:none;flex:1;">🛒 Comprar</button>
       <button class="btn bg" onclick="limpiarCot()" style="flex:1;">🔄 Limpiar</button>
     </div>
@@ -1149,7 +1150,7 @@ textarea{resize:vertical;min-height:62px}
 // ═══════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════
-const GS = 'https://script.google.com/macros/s/AKfycbx1u74HxfF-u5W0Mkpv5ggTBiUMl2zdJaaqsdCpk7HI7zzDcoA_PXJ4SiGse_Exzen2Zg/exec';
+const GS = 'https://script.google.com/macros/s/AKfycbxm6U6ooO7Y13q-SGl9oPW4INtpgHbBALgY0dLoJdARe5_qMTep5p9f7WkmiZgPbkU3MQ/exec';
 
 const ESTADOS = ['Por confirmar','Confirmado','En preparación','Entregado','Cancelado'];
 
@@ -1173,6 +1174,7 @@ function sl(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
 let pedidos  = gl('gs3_pedidos',[]);
 let precios  = gl('gs3_precios',{});
+let FOTOS_COT = gl('gs3_fotoscot',{});
 let catFlat = (()=>{
   try {
     const stored = localStorage.getItem('gs3_cat');
@@ -1452,9 +1454,12 @@ function renderCotizador(){
     <div class="fc">${c.cat}</div>
     <div class="fg">${c.flores.map(n=>{
       const q=cant[n]||0;
+      const foto=FOTOS_COT[n];
+      const admin=(typeof esAdmin==='function' && esAdmin());
       return`<div class="flor${q>0?' sel':''}" onclick="selF('${n}')">
-        <div class="fe">${EMOJIS[n]||'🌸'}</div>
+        <div class="fe">${foto?`<img src="${foto}" style="width:46px;height:46px;border-radius:10px;object-fit:cover;">`:(EMOJIS[n]||'🌸')}</div>
         <div class="fn">${n}</div>
+        ${admin?`<label onclick="event.stopPropagation();" style="display:block;font-size:.58rem;color:#8a6010;font-weight:700;cursor:pointer;margin:2px 0;">📷 Foto<input type="file" accept="image/*" style="display:none" onchange="subirFotoCot('${n.replace(/'/g,"\\'")}',this)"></label>`:''}
         <div class="fq">
           <button class="qb" onclick="event.stopPropagation();chQ('${n}',-1)">−</button>
           <span class="qn">${q}</span>
@@ -1484,9 +1489,41 @@ function renderCot(){
   // Mostrar botón comprar
   const btnC = document.getElementById('btn-comprar');
   if(btnC) btnC.style.display = items.length ? 'block' : 'none';
+  const btnQ = document.getElementById('btn-cotizar');
+  if(btnQ) btnQ.style.display = items.length ? 'block' : 'none';
 }
 
 function limpiarCot(){cant={};const d=document.getElementById('c-desc');if(d)d.value='';renderCotizador();}
+function guardarCotizacion(){
+  const items=Object.entries(cant).filter(([,v])=>v>0);
+  if(!items.length){ notif('Elige al menos una flor','err'); return; }
+  const desc=parseFloat(document.getElementById('c-desc')&&document.getElementById('c-desc').value)||0;
+  let sub=0;
+  const detalle=items.map(([k,v])=>{ const p=(precios[k]&&precios[k].cliente)||0; sub+=p*v; return `${k} x${v}`; }).join(', ');
+  const total=Math.max(0, sub-desc);
+  const cli=document.getElementById('c-cliente');
+  const cliente=(cli&&cli.value||'').trim();
+  envGS({ detalle, total, descuento:desc, cliente, fecha:new Date().toISOString() }, 'cotizacion');
+  notif('✅ Cotización registrada · '+fmt(total));
+}
+function subirFotoCot(n, input){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const f=input.files&&input.files[0]; if(!f) return;
+  _resizeImg(f, d=>{
+    FOTOS_COT[n]=d;
+    sl('gs3_fotoscot', FOTOS_COT);
+    try{ if(typeof db!=='undefined' && db) db.ref('fotoscot/'+n).set(d); }catch(e){ console.warn('fotocot fb',e); }
+    renderCotizador();
+    notif('✅ Foto de "'+n+'" actualizada');
+  });
+}
+function fbEscucharFotosCot(){
+  if(typeof db==='undefined'||!db) return;
+  db.ref('fotoscot').on('value', snap=>{
+    const v=snap.val(); if(v){ FOTOS_COT=v; sl('gs3_fotoscot',FOTOS_COT);
+      if(document.getElementById('cotizador').classList.contains('on')) renderCotizador(); }
+  });
+}
 
 let coDomOn = false;
 
@@ -1692,7 +1729,7 @@ function saveGsUrl(){
 }
 
 async function envGS(p, tipo){
-  const url=gl('gs3_gsurl',null)||GS;
+  const url=GS; // siempre la URL fija del código
   if(!url)return;
   const payload=Object.assign({tipo:tipo||'pedido'}, p);
   try{
@@ -1704,7 +1741,7 @@ async function envGS(p, tipo){
 
 // Cargar precios desde Google Sheets al inicio
 async function cargarPrecios(){
-  const url=gl('gs3_gsurl',null)||GS;
+  const url=GS; // siempre la URL fija del código
   if(!url)return;
   try{
     const r=await fetch(url+'?tipo=precios');
@@ -2123,7 +2160,8 @@ function renderCatalogo() {
               ? `<div class="cat-precio"><span class="cat-precio-old">$${p.precio.toLocaleString('es-CO')}</span> $${p.promo.toLocaleString('es-CO')}</div>`
               : `<div class="cat-precio">$${p.precio.toLocaleString('es-CO')}</div>`}
             ${admin ? `<div class="cat-admin-row">
-              <button onclick="abrirProdForm(${si},'${p.id}')" class="cat-admin-btn">Editar</button>
+              <label class="cat-admin-btn" style="cursor:pointer;">📷 Foto<input type="file" accept="image/*" style="display:none" onchange="subirFotoProd(${si},'${p.id}',this)"></label>
+              <button onclick="abrirProdForm(${si},'${p.id}')" class="cat-admin-btn">✏️ Editar</button>
               <button onclick="eliminarProd(${si},'${p.id}')" class="cat-admin-btn del">🗑️</button>
             </div>` : ''}
           </div>
@@ -2198,6 +2236,12 @@ function abrirProdForm(si, pid){
 }
 function cerrarProdModal(){ const m=document.getElementById('prod-modal'); if(m) m.remove(); }
 function eliminarProd(si, pid){ if(!confirm('¿Eliminar este producto?')) return; const s=CATALOGO_PRODUCTOS[si]; s.productos=s.productos.filter(x=>x.id!==pid); persistCatalogo(); renderCatalogo(); }
+function subirFotoProd(si, pid, input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const s=CATALOGO_PRODUCTOS[si]; if(!s) return;
+  const p=s.productos.find(x=>x.id===pid); if(!p) return;
+  _resizeImg(f, d=>{ p.foto=d; persistCatalogo(); renderCatalogo(); notif('✅ Foto actualizada'); });
+}
 function abrirSeccionForm(){
   const nombre=prompt('Nombre de la nueva categoría (puedes incluir un emoji):','🌷 Nueva categoría');
   if(!nombre) return;
@@ -3188,6 +3232,7 @@ function guardarMov(){
   cajaDatos.unshift(mov);
   saveCaja();
   if(typeof db!=='undefined') db.ref('caja/'+mov.id).set(mov);
+  envGS({ id:mov.id, clase:mov.tipo, monto:mov.monto, categoria:mov.cat, desc:mov.desc, fecha:new Date(mov.fecha).toISOString() }, 'caja');
   cerrarMov();
   notif(movTipo==='ingreso' ? '✅ Venta registrada · '+fmtC(monto) : '✅ Gasto registrado · '+fmtC(monto));
   renderCaja();
@@ -3364,11 +3409,12 @@ window.addEventListener('load', () => {
   try{ fbCargarCatalogo(); }catch(e){ fbOk=false; console.warn('fbCargarCatalogo', e); }
   try{ fbCargarFlores(); }catch(e){ fbOk=false; console.warn('fbCargarFlores', e); }
   try{ fbEscucharContenido(); }catch(e){ console.warn('fbEscucharContenido', e); }
+  try{ fbEscucharFotosCot(); }catch(e){ console.warn('fbEscucharFotosCot', e); }
 
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓' : '🔥 Firebase (local)';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v21' : '🔥 Firebase (local) v21';
   }
 });
 </script>
