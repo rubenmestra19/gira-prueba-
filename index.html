@@ -328,10 +328,9 @@ textarea{resize:vertical;min-height:62px}
   <div class="ndrop">
     <button class="nb" id="tab-pedidos" onclick="toggleDrop('drop-pedidos',this)">📦 Pedidos ▾</button>
     <div class="ndrop-menu" id="drop-pedidos">
-      <button class="nm" onclick="cerrarDrops();ir('pedir')">📦 Pedir</button>
       <button class="nm" onclick="cerrarDrops();ir('seguimiento')">🔍 Mi Pedido</button>
       <button class="nm" onclick="cerrarDrops();ir('cotizador')">💰 Cotizar</button>
-      <button class="nm" id="nb-pedido" onclick="cerrarDrops();irConSeguridad('pedido')">📝 Nuevo Pedido 🔒</button>
+      <button class="nm" id="nb-pedido" onclick="cerrarDrops();ir('pedido')">📝 Nuevo Pedido</button>
       <button class="nm" id="nb-gestion" onclick="cerrarDrops();irConSeguridad('gestion')">📊 Gestión 🔒</button>
       <button class="nm" id="nb-validar" onclick="cerrarDrops();abrirValidarBono()">🎁 Validar bono 🔒</button>
       <button class="nm" id="nb-suscripciones" onclick="cerrarDrops();irConSeguridad('suscripciones')">🌻 Suscripciones 🔒</button>
@@ -385,7 +384,7 @@ textarea{resize:vertical;min-height:62px}
       <div id="cfg-hero-sub" style="font-size:.82rem;color:#7a6a4a;margin-top:6px;max-width:320px;margin-inline:auto;line-height:1.45;">Ramos frescos hechos a mano en Turbo. Pídelos hoy y los llevamos a domicilio.</div>
       <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
         <button onclick="ir('catalogo')" style="border:none;border-radius:12px;padding:11px 22px;background:#F5C518;color:#1a0900;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:0 4px 14px rgba(245,197,24,.35);">Ver catálogo</button>
-        <button onclick="ir('pedir')" style="border:1.5px solid #1a0900;border-radius:12px;padding:11px 22px;background:#fff;color:#1a0900;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">Pedir ahora</button>
+        <button onclick="ir('pedido')" style="border:1.5px solid #1a0900;border-radius:12px;padding:11px 22px;background:#fff;color:#1a0900;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">Pedir ahora</button>
       </div>
       <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:11px;">
         <button onclick="ir('flores')" class="cat-chip">🌸 Flores</button>
@@ -638,101 +637,6 @@ textarea{resize:vertical;min-height:62px}
 </div>
 
 <!-- PEDIR — FORMULARIO PÚBLICO -->
-<div class="pg" id="pedir">
-
-  <!-- Hero -->
-  <div style="background:#1a0900;padding:1.6rem 1.5rem 1.2rem;text-align:center;border-bottom:3px solid #F5C518;">
-    <div style="font-size:1.8rem;margin-bottom:4px;">💐</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:#F5C518;line-height:1.2;">Haz tu pedido</div>
-    <div style="font-size:.75rem;color:rgba(255,255,255,.6);margin-top:4px;">Te contactamos para confirmar y coordinar entrega</div>
-  </div>
-
-  <div style="padding:16px;">
-    <div class="card" style="margin-top:0;">
-
-      <!-- Tipo de arreglo -->
-      <div style="margin-bottom:12px;">
-        <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">¿Qué deseas pedir? *</label>
-        <select id="pub-tipo" class="iy">
-          <option value="">— Selecciona el arreglo —</option>
-          <option>Ramo de flores</option><option>Ramo de rosas</option>
-          <option>Bouquet de flores</option><option>Bouquet de rosas</option>
-          <option>Ancheta de Flores</option><option>Girasol decorado</option>
-          <option>Rosa Decorada</option><option>Ramillete de rosas</option>
-          <option>Centro de mesa</option><option>Arreglo con botella</option>
-          <option>Ramillete de rosas y girasoles</option><option>Ramo corazón</option>
-          <option>Personalizado</option><option>Otro</option>
-        </select>
-      </div>
-
-      <!-- Fecha y hora -->
-      <div class="r2" style="margin-bottom:12px;">
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Fecha de entrega *</label>
-          <input type="date" id="pub-fecha" class="iy">
-        </div>
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Hora *</label>
-          <input type="time" id="pub-hora" class="iy" value="10:00">
-        </div>
-      </div>
-
-      <!-- Datos cliente -->
-      <div class="r2" style="margin-bottom:12px;">
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Tu nombre *</label>
-          <input type="text" id="pub-cliente" class="iy" placeholder="Ej: María López">
-        </div>
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Tu celular *</label>
-          <input type="tel" id="pub-celular" class="iy" placeholder="310 000 0000">
-        </div>
-      </div>
-
-      <!-- Para quién -->
-      <div class="r2" style="margin-bottom:12px;">
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Para quién es</label>
-          <input type="text" id="pub-dest" class="iy" placeholder="Ej: Mamá, mi novia...">
-        </div>
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Cel destinatario</label>
-          <input type="tel" id="pub-celular-dest" class="iy" placeholder="310 000 0000">
-        </div>
-      </div>
-
-      <!-- Domicilio toggle — sin mostrar precio -->
-      <div style="background:#f8f8f6;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;" onclick="pubTogDom()">
-          <div>
-            <div style="font-size:.85rem;font-weight:600;color:#1a0900;">🛵 ¿Con domicilio?</div>
-            <div style="font-size:.7rem;color:#5a5a5a;">Entrega a domicilio en Turbo</div>
-          </div>
-          <div id="pub-tog-d" class="tog" style="cursor:pointer;"></div>
-        </div>
-        <div id="pub-dom-f" style="display:none;margin-top:10px;">
-          <input type="text" id="pub-dir" class="iy" placeholder="Dirección: barrio, calle, referencia...">
-        </div>
-      </div>
-
-      <!-- Mensaje tarjeta -->
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:.65rem;font-weight:700;color:#3B2000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px;">Mensaje de tarjeta</label>
-        <textarea id="pub-detalle" class="iy" placeholder="Ej: Feliz cumpleaños ❤️" rows="2" style="resize:none;"></textarea>
-      </div>
-
-      <button onclick="enviarPedidoPublico()" style="display:block;width:100%;padding:12px;border-radius:12px;border:none;background:#F5C518;color:#1a0900;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(245,197,24,.35);">
-        🌻 Enviar pedido
-      </button>
-
-      <div style="text-align:center;margin-top:10px;font-size:.7rem;color:#a0a0a0;">
-        Te confirmaremos por WhatsApp · 312 274 8613
-      </div>
-
-    </div>
-  </div>
-</div>
-
 <!-- PANTALLA ÉXITO PEDIDO PÚBLICO -->
 <div id="pedir-exito" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:700;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;">
   <div style="font-size:3.5rem;margin-bottom:16px;">🌻</div>
@@ -748,40 +652,12 @@ textarea{resize:vertical;min-height:62px}
 <div class="pg" id="pedido">
   <div class="card">
     <p class="ch">📝 Nuevo Pedido</p>
-    <p class="cs">Completa los datos y registra el pedido.</p>
-
-    <span class="sl">Tipo de pedido</span>
-    <div class="r2">
-      <div>
-        <label>Tipo de arreglo *</label>
-        <select id="p-tipo" class="iy">
-          <option value="">— Selecciona —</option>
-          <option>Ramo de flores</option><option>Ramo de rosas</option>
-          <option>Bouquet de flores</option><option>Bouquet de rosas</option>
-          <option>Ancheta de Flores</option><option>Ancheta</option>
-          <option>Girasol decorado</option><option>Rosa Decorada</option>
-          <option>Ramillete de rosas</option><option>Arreglo Fúnebre</option>
-          <option>Corona Fúnebre</option><option>Centro de mesa</option>
-          <option>Personalizado</option><option>Bouquet de rosas rojas</option>
-          <option>Arreglo con botella</option><option>Ramillete de rosas rosadas</option>
-          <option>Ramillete de rosas y girasoles</option><option>Ramo corazón</option>
-          <option>Ramo de flores y maní</option><option>Otro</option>
-        </select>
-      </div>
-      <div>
-        <label>Fecha del pedido</label>
-        <input type="date" id="p-fpedido">
-      </div>
-    </div>
-    <div>
-      <label>Detalle / Mensaje de tarjeta</label>
-      <textarea id="p-detalle" placeholder="Ej: Feliz cumpleaños mamá ❤️"></textarea>
-    </div>
+    <p class="cs">Completa tus datos, agrega uno o varios productos, y al final envía el pedido.</p>
 
     <span class="sl">Datos del cliente</span>
     <div class="r2">
       <div><label>Cliente (quién pide) *</label><input type="text" id="p-cliente" placeholder="Ej: María López"></div>
-      <div><label>Celular</label><input type="tel" id="p-celular" placeholder="310 000 0000"></div>
+      <div><label>Celular *</label><input type="tel" id="p-celular" placeholder="310 000 0000"></div>
     </div>
     <div class="r2">
       <div><label>Para quién (recibe)</label><input type="text" id="p-dest" placeholder="Ej: Mamá de María"></div>
@@ -805,30 +681,47 @@ textarea{resize:vertical;min-height:62px}
       </div>
     </div>
 
-    <span class="sl">Pago</span>
-    <div class="r3">
-      <div><label>Precio arreglo ($) *</label><input type="number" id="p-precio" placeholder="0" min="0" class="iy" oninput="calcP()"></div>
+    <span class="sl">Forma de pago</span>
+    <select id="p-fpago">
+      <option>Efectivo</option><option>Transferencia</option>
+      <option>Tarjeta</option><option>Depósito</option><option>Otro</option>
+    </select>
+
+    <span class="sl">Agregar producto</span>
+    <div class="r2">
       <div>
-        <label>Forma de pago</label>
-        <select id="p-fpago">
-          <option>Efectivo</option><option>Transferencia</option>
-          <option>Tarjeta</option><option>Depósito</option><option>Otro</option>
+        <label>Tipo de arreglo *</label>
+        <select id="p-tipo" class="iy">
+          <option value="">— Selecciona —</option>
+          <option>Ramo de flores</option><option>Ramo de rosas</option>
+          <option>Bouquet de flores</option><option>Bouquet de rosas</option>
+          <option>Ancheta de Flores</option><option>Ancheta</option>
+          <option>Girasol decorado</option><option>Rosa Decorada</option>
+          <option>Ramillete de rosas</option><option>Arreglo Fúnebre</option>
+          <option>Corona Fúnebre</option><option>Centro de mesa</option>
+          <option>Personalizado</option><option>Bouquet de rosas rojas</option>
+          <option>Arreglo con botella</option><option>Ramillete de rosas rosadas</option>
+          <option>Ramillete de rosas y girasoles</option><option>Ramo corazón</option>
+          <option>Ramo de flores y maní</option><option>Otro</option>
         </select>
       </div>
-      <div><label>Anticipo ($)</label><input type="number" id="p-ant" placeholder="0" min="0" oninput="calcP()"></div>
+      <div><label>Precio / presupuesto ($) *</label><input type="number" id="p-precio" placeholder="0" min="0" class="iy"></div>
     </div>
+    <div>
+      <label>Detalle / Mensaje de tarjeta</label>
+      <textarea id="p-detalle" placeholder="Ej: Feliz cumpleaños mamá ❤️"></textarea>
+    </div>
+    <button class="btn bg" onclick="agregarProductoNP()" style="width:100%;margin-top:6px;">➕ Agregar producto</button>
+
+    <div id="np-lista" style="margin-top:10px"></div>
+
     <div class="pb" id="p-box" style="display:none">
-      <div class="pl"><span>Precio arreglo:</span><span id="r-precio">$0</span></div>
       <div class="pl"><span>Domicilio:</span><span id="r-dom">$0</span></div>
-      <div class="pl"><span>Anticipo:</span><span id="r-ant">$0</span></div>
-      <div class="pt"><span class="pt-l">Saldo pendiente</span><span class="pt-v" id="r-saldo">$0</span></div>
+      <div class="pt"><span class="pt-l">Total del pedido</span><span class="pt-v" id="r-precio">$0</span></div>
     </div>
 
-    <span class="sl">Atendido por</span>
-    <input type="text" id="p-at" placeholder="Tu nombre">
-
-    <button class="btn bs" onclick="guardarPedido()">✅ Registrar Pedido</button>
-    <button class="btn bg" onclick="limpiarPedido()">🗑 Limpiar</button>
+    <button class="btn bs" onclick="enviarPedidoNP()" style="margin-top:14px;">✅ Enviar pedido</button>
+    <button class="btn bg" onclick="limpiarPedido()">🗑 Limpiar todo</button>
   </div>
 </div>
 
@@ -1315,10 +1208,10 @@ function ir(id,btn){
     const ivf=document.getElementById('inv-fecha'); if(ivf&&!ivf.value) ivf.value=hoy();
     const dsf=document.getElementById('desc-fecha'); if(dsf&&!dsf.value) dsf.value=hoy();
   }
-  if(id==='pedir'){ const pf=document.getElementById('pub-fecha'); if(pf&&!pf.value) pf.value=hoy(); }
+  if(id==='pedido'){ if(!document.getElementById('p-fecha').value) document.getElementById('p-fecha').value=hoy(); }
   if(id==='flores'){ if(typeof renderFlores==='function') renderFlores(); }
   // Resaltar el grupo correcto del nav (Inicio/Pedidos/Catálogo/Caja/Finanzas)
-  const PAGE_TO_TAB={inicio:'tab-inicio',pedir:'tab-pedidos',seguimiento:'tab-pedidos',cotizador:'tab-pedidos',pedido:'tab-pedidos',gestion:'tab-pedidos',suscripciones:'tab-pedidos',catalogo:'tab-inicio',flores:'tab-inicio',precios:'tab-admin-grupo',admin:'tab-admin-grupo',caja:'nb-caja',finanzas:'tab-admin-grupo',inventario:'tab-admin-grupo'};
+  const PAGE_TO_TAB={inicio:'tab-inicio',seguimiento:'tab-pedidos',cotizador:'tab-pedidos',pedido:'tab-pedidos',gestion:'tab-pedidos',suscripciones:'tab-pedidos',catalogo:'tab-inicio',flores:'tab-inicio',precios:'tab-admin-grupo',admin:'tab-admin-grupo',caja:'nb-caja',finanzas:'tab-admin-grupo',inventario:'tab-admin-grupo'};
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   const _tab=PAGE_TO_TAB[id]; if(_tab){const _t=document.getElementById(_tab); if(_t)_t.classList.add('on');}
 }
@@ -1340,15 +1233,7 @@ function n(id){return parseFloat(document.getElementById(id).value)||0;}
 function fmt(v){return '$'+v.toLocaleString('es-CO');}
 
 function calcP(){
-  const precio=n('p-precio'), dom=domOn?n('p-pdom'):0, ant=n('p-ant');
-  const box=document.getElementById('p-box');
-  if(precio>0||dom>0){
-    box.style.display='block';
-    document.getElementById('r-precio').textContent=fmt(precio);
-    document.getElementById('r-dom').textContent=fmt(dom);
-    document.getElementById('r-ant').textContent=fmt(ant);
-    document.getElementById('r-saldo').textContent=fmt(Math.max(0,precio+dom-ant));
-  } else box.style.display='none';
+  renderProductosNP();
 }
 
 // ═══════════════════════════════════════════════
@@ -1356,33 +1241,89 @@ function calcP(){
 // ═══════════════════════════════════════════════
 function v(id){return document.getElementById(id).value.trim();}
 
-function guardarPedido(){
-  const cliente=v('p-cliente'), tipo=v('p-tipo'), fecha=v('p-fecha'), hora=v('p-hora'), precio=n('p-precio');
+let productosNP = [];
+
+function agregarProductoNP(){
+  const tipo=v('p-tipo'), detalle=v('p-detalle'), precio=n('p-precio');
+  if(!tipo){ notif('⚠️ Selecciona el tipo de arreglo','err'); return; }
+  if(!precio){ notif('⚠️ Escribe el precio o presupuesto','err'); return; }
+  productosNP.push({tipo, detalle, precio});
+  document.getElementById('p-tipo').value='';
+  document.getElementById('p-detalle').value='';
+  document.getElementById('p-precio').value='';
+  renderProductosNP();
+  notif('✅ '+tipo+' agregado — ¿algo más?');
+}
+
+function quitarProductoNP(i){
+  productosNP.splice(i,1);
+  renderProductosNP();
+}
+
+function renderProductosNP(){
+  const wrap=document.getElementById('np-lista'), box=document.getElementById('p-box');
+  if(!wrap) return;
+  if(!productosNP.length){ wrap.innerHTML=''; box.style.display='none'; return; }
+  wrap.innerHTML = productosNP.map((p,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gris2);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:.85rem;">${p.tipo}</div>
+        ${p.detalle?`<div style="font-size:.72rem;color:var(--gris);">${p.detalle}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:700;color:var(--sol2);white-space:nowrap;">$${p.precio.toLocaleString('es-CO')}</span>
+        <button onclick="quitarProductoNP(${i})" style="background:none;border:none;color:var(--rojo);font-size:1.05rem;cursor:pointer;">🗑️</button>
+      </div>
+    </div>`).join('');
+  const dom = domOn?n('p-pdom'):0;
+  const totalProductos = productosNP.reduce((s,p)=>s+p.precio,0);
+  document.getElementById('r-dom').textContent = '$'+dom.toLocaleString('es-CO');
+  document.getElementById('r-precio').textContent = '$'+(totalProductos+dom).toLocaleString('es-CO');
+  box.style.display='block';
+}
+
+function enviarPedidoNP(){
+  const cliente=v('p-cliente'), celular=v('p-celular'), fecha=v('p-fecha'), hora=v('p-hora');
   if(!cliente){notif('⚠️ Falta el nombre del cliente','err');return;}
-  if(!tipo){notif('⚠️ Selecciona el tipo de arreglo','err');return;}
+  if(!celular){notif('⚠️ Falta el celular','err');return;}
   if(!fecha){notif('⚠️ Falta la fecha de entrega','err');return;}
   if(!hora){notif('⚠️ Falta la hora de entrega','err');return;}
-  if(!precio){notif('⚠️ Falta el precio del arreglo','err');return;}
+  if(!productosNP.length){notif('⚠️ Agrega al menos un producto','err');return;}
+  if(domOn && !v('p-dir')){notif('⚠️ Falta la dirección de entrega','err');return;}
 
-  const dom=domOn?n('p-pdom'):0, ant=n('p-ant');
+  const dom=domOn?n('p-pdom'):0;
+  const tipo = productosNP.map(p=>p.tipo).join(' + ');
+  const detalle = productosNP.map(p=> p.detalle ? `${p.tipo} (${p.detalle})` : p.tipo).join(', ');
+  const precio = productosNP.reduce((s,p)=>s+p.precio,0);
+  const codigo = 'GS-'+Math.random().toString(36).substr(2,4).toUpperCase();
+
   const p={
-    id:Date.now(), tipo, detalle:v('p-detalle'), cliente,
-    celular:v('p-celular'), dest:v('p-dest'), celularDest:v('p-celular-dest'), fecha, hora,
+    id:Date.now(), tipo, detalle, cliente,
+    celular, dest:v('p-dest'), celularDest:v('p-celular-dest'), fecha, hora,
     domicilio:domOn, dir:v('p-dir'), pdom:dom,
-    precio, fpago:v('p-fpago'), ant, saldo:Math.max(0,precio+dom-ant),
-    at:v('p-at'), estado:'Por confirmar', reg:new Date().toISOString(),
-    codigo:'GS-'+Math.random().toString(36).substr(2,4).toUpperCase()
+    precio, fpago:v('p-fpago'), saldo:Math.max(0,precio+dom),
+    estado:'Por confirmar', reg:new Date().toISOString(),
+    codigo
   };
   pedidos.push(p);
   sl('gs3_pedidos',pedidos);
-  envGS(p);
-  // Guardar en Firebase
-  if(typeof db !== 'undefined') db.ref('pedidos/'+p.id).set(p); fbSeguimiento(p);
-  // Leer celular ANTES de limpiar el formulario
-  const celCli = v('p-celular');
-  const codPed = p.codigo;
+  envGS(p,'pedido');
+  if(typeof db !== 'undefined') db.ref('pedidos/'+p.id).set(p);
+  fbSeguimiento(p);
+
+  const celCli = celular, codPed = p.codigo;
   limpiarPedido();
-  notif('✅ Pedido de '+cliente+' registrado · Código: '+codPed);
+
+  // Pantalla de éxito para cualquiera (cliente o staff) — nadie es redirigido a Gestión sin querer
+  const exitoEl = document.getElementById('pedir-exito');
+  if(exitoEl){
+    document.getElementById('exito-codigo').textContent = '🔑 Tu código: '+codPed;
+    exitoEl.style.display = 'flex';
+    setTimeout(()=>{ const sc=document.getElementById('seg-codigo'); if(sc) sc.value=codPed; }, 300);
+  } else {
+    notif('✅ Pedido de '+cliente+' registrado · Código: '+codPed);
+  }
+
   // WhatsApp al cliente si tiene celular
   if(celCli){
     const numLimpio = celCli.replace(/\D/g,'');
@@ -1397,11 +1338,8 @@ function guardarPedido(){
       'https://floristeriagirasoles.netlify.app?cod='+codPed+'\n\n' +
       '¡Gracias por elegir Girasoles! 🌻'
     );
-    // Mostrar botón visible para evitar bloqueo del navegador
     setTimeout(()=>{
       const waUrl = 'https://wa.me/'+num+'?text='+msgCliente;
-      notif('✅ Pedido registrado · '+codPed);
-      // Crear botón flotante de WhatsApp
       const btnWa = document.createElement('div');
       btnWa.id = 'btn-wa-cliente';
       btnWa.innerHTML = `<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#25D366;color:#fff;padding:12px 22px;border-radius:14px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;z-index:999;box-shadow:0 4px 20px rgba(37,211,102,.4);display:flex;align-items:center;gap:8px;" onclick="window.open('${waUrl}','_blank');this.parentElement.remove();">
@@ -1411,19 +1349,19 @@ function guardarPedido(){
       setTimeout(()=>{ const b=document.getElementById('btn-wa-cliente'); if(b)b.remove(); }, 12000);
     }, 500);
   }
-  setTimeout(()=>{ir('gestion',document.querySelector('.nb:nth-child(3)'));},700);
 }
 
 function limpiarPedido(){
-  ['p-cliente','p-celular','p-dest','p-celular-dest','p-detalle','p-precio','p-ant','p-at','p-dir','p-pdom']
+  ['p-cliente','p-celular','p-dest','p-celular-dest','p-detalle','p-precio','p-dir','p-pdom']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('p-tipo').value='';
   document.getElementById('p-fpago').value='Efectivo';
   document.getElementById('p-fecha').value=hoy();
   document.getElementById('p-hora').value='';
-  document.getElementById('p-fpedido').value=hoy();
   const si=document.getElementById('sub-inicio'); if(si) si.value=hoy();
   if(domOn)togDom();
+  productosNP = [];
+  const npl=document.getElementById('np-lista'); if(npl) npl.innerHTML='';
   document.getElementById('p-box').style.display='none';
 }
 
@@ -1582,6 +1520,9 @@ function guardarCotizacion(){
   const celular=(celEl&&celEl.value||'').trim();
   envGS({ detalle, total, descuento:desc, cliente, celular, fecha:new Date().toISOString() }, 'cotizacion');
   notif('✅ Cotización registrada · '+fmt(total));
+  if(cli) cli.value='';
+  if(celEl) celEl.value='';
+  limpiarCot();
 }
 function subirFotoCot(n, input){
   if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
@@ -1759,6 +1700,8 @@ function confirmarPedidoCarrito(){
   if(!nombre||!celular){ notif('⚠️ Escribe tu nombre y celular','err'); return; }
   const entrega=g('ck-entrega');
   const fechaEntrega=g('ck-fecha'), horaEntrega=g('ck-hora');
+  if(!fechaEntrega){ notif('⚠️ Elige la fecha de entrega','err'); return; }
+  if(!horaEntrega){ notif('⚠️ Elige la hora de entrega','err'); return; }
   let destNombre='', destCel='', dir='', zona='', domicilio=0, domNota='';
   if(entrega==='domicilio'){
     destNombre=g('ck-dest-nombre'); destCel=g('ck-dest-cel'); dir=g('ck-dir'); zona=g('ck-zona');
@@ -1771,9 +1714,9 @@ function confirmarPedidoCarrito(){
   const total=subtotal+domicilio;
   const p={ id:Date.now(), codigo, cliente:nombre, celular,
             entrega, dest:destNombre, celularDest:destCel, dir, zona, domicilio, domNota,
-            fechaEntrega, horaEntrega,
-            detalle, subtotal, total, nota,
-            estado:'Nuevo', reg:new Date().toISOString(), fecha:new Date().toLocaleDateString('es-CO') };
+            fechaEntrega, horaEntrega, fecha:fechaEntrega, hora:horaEntrega,
+            detalle, subtotal, total, precio:total, nota,
+            estado:'Nuevo', reg:new Date().toISOString(), fechaPedido:new Date().toLocaleDateString('es-CO') };
   try{ if(typeof db!=='undefined' && db) db.ref('pedidos/'+p.id).set(p); }catch(e){ console.warn('fb pedido',e); }
   try{ if(typeof fbSeguimiento==='function') fbSeguimiento(p); }catch(e){}
   envGS(p,'pedido');
@@ -2099,7 +2042,6 @@ function tic(){
 // INIT
 // ═══════════════════════════════════════════════
 document.getElementById('p-fecha').value=hoy();
-document.getElementById('p-fpedido').value=hoy();
   const si=document.getElementById('sub-inicio'); if(si) si.value=hoy();
 // Pre-renderizar todo al inicio para detectar errores temprano
 // Cargar precios compartidos desde Google Sheets
@@ -2123,7 +2065,7 @@ setInterval(()=>{if(document.getElementById('gestion').classList.contains('on'))
 // SISTEMA DE CONTRASEÑA
 // ═══════════════════════════════════════════════
 // Login mediante Firebase Authentication (sin contraseña en el código)
-const PESTANAS_PRIVADAS = ['gestion','precios','admin','suscripciones','pedido','caja','finanzas','inventario'];
+const PESTANAS_PRIVADAS = ['gestion','precios','admin','suscripciones','caja','finanzas','inventario'];
 
 // ── ROLES POR CORREO ───────────────────────────
 // admin = acceso total (Ruben, Karol) · empleada = equipo sin administración (Oficina)
@@ -2139,7 +2081,7 @@ let paginaPendiente = null;
 let autenticado = false;
 
 function initSeguridad(){
-  ['nb-pedido','nb-gestion','nb-suscripciones','nb-caja','grp-admin'].forEach(id=>{
+  ['nb-gestion','nb-suscripciones','nb-caja','grp-admin'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
   const pgs2=document.getElementById('panel-gs');if(pgs2)pgs2.style.display='none';
@@ -2326,7 +2268,7 @@ function abrirLoginEquipo(){
 function _mostrarTabsPrivados(mostrar){
   const admin = mostrar && esAdmin();
   // Pestañas de equipo — todos los que inician sesión
-  ['nb-pedido','nb-gestion','nb-suscripciones','nb-caja','nb-validar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=mostrar?'flex':'none';});
+  ['nb-gestion','nb-suscripciones','nb-caja','nb-validar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=mostrar?'flex':'none';});
   // Administración (Finanzas/Precios/Productos) y config Sheets — solo admin
   const grpA=document.getElementById('grp-admin');if(grpA)grpA.style.display=admin?'flex':'none';
   const pgs=document.getElementById('panel-gs');if(pgs)pgs.style.display=admin?'block':'none';
@@ -2507,7 +2449,7 @@ function renderDestacados(){
       <div class="dest-info">
         <div class="dest-nombre">${p.nombre}</div>
         <div class="dest-precio">$${p.precio.toLocaleString('es-CO')} <small>desde</small></div>
-        <button onclick="event.stopPropagation();ir('pedir')" class="dest-pedir">Pedir</button>
+        <button onclick="event.stopPropagation();abrirPedir('${(p.nombre||'').replace(/'/g,"\\'")}', ${p.precio})" class="dest-pedir">Pedir</button>
       </div>
     </div>`).join('');
 }
@@ -3037,6 +2979,7 @@ function guardarCaja(){
   };
 
   try{ db.ref('inventario/cajas/'+id).set(registro); }catch(e){ console.warn('fb inventario', e); }
+  envGS(Object.assign({}, registro), 'compraInsumo');
   inventarioCajas[id] = registro;
 
   if(document.getElementById('inv-sync-costo').checked){
@@ -3159,7 +3102,7 @@ function renderDescRows(){
   wrap.innerHTML = _descRows.map((row,i)=>`
     <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:8px;align-items:end;margin-top:8px">
       <div><label style="${i>0?'display:none':''}">Material</label><input type="text" list="lista-insumos" value="${row.insumo||''}" oninput="_descRows[${i}].insumo=this.value" placeholder="Ej: Rosa roja"></div>
-      <div><label style="${i>0?'display:none':''}">Cantidad</label><input type="number" step="0.1" min="0" value="${row.cantidad||''}" oninput="_descRows[${i}].cantidad=parseFloat(this.value)||0" placeholder="0"></div>
+      <div><label style="${i>0?'display:none':''}">Cantidad</label><input type="text" inputmode="decimal" value="${row.cantidad||''}" oninput="_descRows[${i}].cantidad=parseFloat((this.value||'0').replace(',','.'))||0" placeholder="Ej: 0,5"></div>
       <button onclick="removeDescRow(${i})" style="background:none;border:none;color:var(--rojo);font-size:1.2rem;cursor:pointer;padding-bottom:9px;">🗑️</button>
     </div>`).join('');
 }
@@ -3231,6 +3174,10 @@ function confirmarDescuento(){
   };
 
   try{ db.ref('inventario/consumos/'+id).set(registro); }catch(e){ console.warn('fb consumo', e); }
+  envGS({
+    id, nota: registro.nota, fecha: registro.fecha,
+    resumen: filas.map(r=> r.cantidad+' '+r.insumo).join(', ')
+  }, 'consumoInsumo');
   inventarioConsumos[id] = registro;
 
   _descRows = [{insumo:'',cantidad:''}];
@@ -3469,81 +3416,9 @@ function enviarSub() {
 }
 
 // ═══════════════════════════════════════════════
-// FORMULARIO PÚBLICO DE PEDIDO
+// FORMULARIO PÚBLICO DE PEDIDO — fusionado con Nuevo Pedido
+// (ver función enviarPedidoNP() más abajo)
 // ═══════════════════════════════════════════════
-let pubDomOn = false;
-
-function pubTogDom(){
-  pubDomOn = !pubDomOn;
-  document.getElementById('pub-tog-d').className = 'tog'+(pubDomOn?' on':'');
-  document.getElementById('pub-dom-f').style.display = pubDomOn ? 'block' : 'none';
-}
-
-function enviarPedidoPublico(){
-  const tipo    = document.getElementById('pub-tipo').value;
-  const fecha   = document.getElementById('pub-fecha').value;
-  const hora    = document.getElementById('pub-hora').value;
-  const cliente = document.getElementById('pub-cliente').value.trim();
-  const celular = document.getElementById('pub-celular').value.trim();
-  const dest    = document.getElementById('pub-dest').value.trim();
-  const celDest = document.getElementById('pub-celular-dest').value.trim();
-  const detalle = document.getElementById('pub-detalle').value.trim();
-  const dir     = pubDomOn ? document.getElementById('pub-dir').value.trim() : '';
-
-  if(!tipo)    { notif('⚠️ Selecciona el tipo de arreglo','err'); return; }
-  if(!fecha)   { notif('⚠️ Falta la fecha de entrega','err'); return; }
-  if(!hora)    { notif('⚠️ Falta la hora','err'); return; }
-  if(!cliente) { notif('⚠️ Falta tu nombre','err'); return; }
-  if(!celular) { notif('⚠️ Falta tu celular','err'); return; }
-  if(pubDomOn && !dir) { notif('⚠️ Falta la dirección de entrega','err'); return; }
-
-  // Domicilio fijo $6.000 — asignado internamente, no visible al cliente
-  const DOMICILIO_FIJO = 6000;
-
-  const codigo = 'GS-'+Math.random().toString(36).substr(2,4).toUpperCase();
-  const p = {
-    id: Date.now(),
-    tipo, detalle, cliente, celular,
-    dest: dest||cliente, celularDest: celDest,
-    fecha, hora,
-    domicilio: pubDomOn, dir,
-    pdom: pubDomOn ? DOMICILIO_FIJO : 0,
-    precio: 0, // precio lo asigna internamente Girasoles
-    fpago: '', ant: 0, saldo: 0,
-    at: '', estado: 'Por confirmar',
-    reg: new Date().toISOString(),
-    codigo,
-    pedidoPublico: true  // marca para identificar origen
-  };
-
-  pedidos.push(p);
-  sl('gs3_pedidos', pedidos);
-  envGS(p);
-  if(typeof db !== 'undefined') db.ref('pedidos/'+p.id).set(p); fbSeguimiento(p);
-
-  // Limpiar formulario
-  ['pub-tipo','pub-cliente','pub-celular','pub-dest','pub-celular-dest','pub-detalle','pub-dir','pub-fecha'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.value='';
-  });
-  if(pubDomOn) pubTogDom();
-
-  // Mostrar pantalla de éxito — NO redirigir a Gestión
-  const exitoEl = document.getElementById('pedir-exito');
-  document.getElementById('exito-codigo').textContent = '🔑 Tu código: '+codigo;
-  exitoEl.style.display = 'flex';
-
-  // Pre-llenar seguimiento con el código
-  setTimeout(()=>{
-    const sc = document.getElementById('seg-codigo');
-    if(sc) sc.value = codigo;
-  }, 300);
-}
-
-window.addEventListener('load', ()=>{
-  const pf = document.getElementById('pub-fecha');
-  if(pf) pf.min = hoy();
-});
 
 // ═══════════════════════════════════════════════
 // SUSCRIPCIONES ACTIVAS
@@ -3635,6 +3510,7 @@ function guardarSuscripcion(){
   suscripciones.push(sub);
   localStorage.setItem('gs3_subs', JSON.stringify(suscripciones));
   if(typeof db!=='undefined') db.ref('suscripciones/'+sub.id).set(sub);
+  envGS(sub, 'suscripcion');
 
   // Limpiar
   ['sub-cli','sub-cel','sub-dir'].forEach(id=>document.getElementById(id).value='');
@@ -4082,7 +3958,7 @@ window.addEventListener('load', () => {
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v26' : '🔥 Firebase (local) v26';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v27' : '🔥 Firebase (local) v27';
   }
 });
 </script>
