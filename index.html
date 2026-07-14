@@ -652,33 +652,12 @@ textarea{resize:vertical;min-height:62px}
 <div class="pg" id="pedido">
   <div class="card">
     <p class="ch">📝 Nuevo Pedido</p>
-    <p class="cs">Completa tus datos, agrega uno o varios productos, y al final envía el pedido.</p>
+    <p class="cs">Completa tus datos, agrega uno o varios productos (cada uno con su propia entrega), y al final envía el pedido.</p>
 
-    <span class="sl">Datos del cliente</span>
+    <span class="sl">Datos del comprador</span>
     <div class="r2">
       <div><label>Cliente (quién pide) *</label><input type="text" id="p-cliente" placeholder="Ej: María López"></div>
       <div><label>Celular *</label><input type="tel" id="p-celular" placeholder="310 000 0000"></div>
-    </div>
-    <div class="r2">
-      <div><label>Para quién (recibe)</label><input type="text" id="p-dest" placeholder="Ej: Mamá de María"></div>
-      <div><label>Celular destinatario</label><input type="tel" id="p-celular-dest" placeholder="310 000 0000"></div>
-    </div>
-
-    <span class="sl">Entrega</span>
-    <div class="r2">
-      <div><label>Fecha de entrega *</label><input type="date" id="p-fecha" class="iy"></div>
-      <div><label>Hora de entrega *</label><input type="time" id="p-hora" class="iy"></div>
-    </div>
-
-    <div class="tog-row" id="dom-tog" onclick="togDom()">
-      <div class="tog" id="tog-d"></div>
-      <label>¿Entrega a domicilio?</label>
-    </div>
-    <div class="dom-f" id="dom-f">
-      <div class="r2">
-        <div><label>Dirección</label><input type="text" id="p-dir" placeholder="Barrio, calle..."></div>
-        <div><label>Precio domicilio ($)</label><input type="number" id="p-pdom" placeholder="0" min="0" oninput="calcP()"></div>
-      </div>
     </div>
 
     <span class="sl">Forma de pago</span>
@@ -691,32 +670,46 @@ textarea{resize:vertical;min-height:62px}
     <div class="r2">
       <div>
         <label>Tipo de arreglo *</label>
-        <select id="p-tipo" class="iy">
+        <select id="p-tipo" class="iy" onchange="onCambioTipoNP()">
           <option value="">— Selecciona —</option>
-          <option>Ramo de flores</option><option>Ramo de rosas</option>
-          <option>Bouquet de flores</option><option>Bouquet de rosas</option>
-          <option>Ancheta de Flores</option><option>Ancheta</option>
-          <option>Girasol decorado</option><option>Rosa Decorada</option>
-          <option>Ramillete de rosas</option><option>Arreglo Fúnebre</option>
-          <option>Corona Fúnebre</option><option>Centro de mesa</option>
-          <option>Personalizado</option><option>Bouquet de rosas rojas</option>
-          <option>Arreglo con botella</option><option>Ramillete de rosas rosadas</option>
-          <option>Ramillete de rosas y girasoles</option><option>Ramo corazón</option>
-          <option>Ramo de flores y maní</option><option>Otro</option>
         </select>
       </div>
-      <div><label>Precio / presupuesto ($) *</label><input type="number" id="p-precio" placeholder="0" min="0" class="iy"></div>
+      <div>
+        <label>Precio / presupuesto ($) *</label>
+        <input type="number" id="p-precio" placeholder="0" min="0" class="iy">
+        <div id="p-precio-hint" style="display:none;font-size:.7rem;color:var(--gris);margin-top:4px;">🔒 Precio fijo del catálogo</div>
+      </div>
     </div>
     <div>
       <label>Detalle / Mensaje de tarjeta</label>
       <textarea id="p-detalle" placeholder="Ej: Feliz cumpleaños mamá ❤️"></textarea>
     </div>
-    <button class="btn bg" onclick="agregarProductoNP()" style="width:100%;margin-top:6px;">➕ Agregar producto</button>
+
+    <span class="sl">Entrega de este producto</span>
+    <div class="r2">
+      <div><label>Para quién (recibe)</label><input type="text" id="p-dest" placeholder="Ej: Mamá de María"></div>
+      <div><label>Celular destinatario</label><input type="tel" id="p-celular-dest" placeholder="310 000 0000"></div>
+    </div>
+    <div class="r2">
+      <div><label>Fecha de entrega *</label><input type="date" id="p-fecha" class="iy"></div>
+      <div><label>Hora de entrega *</label><input type="time" id="p-hora" class="iy"></div>
+    </div>
+    <div class="tog-row" id="dom-tog" onclick="togDom()">
+      <div class="tog" id="tog-d"></div>
+      <label>¿Entrega a domicilio?</label>
+    </div>
+    <div class="dom-f" id="dom-f">
+      <div class="r2">
+        <div><label>Dirección</label><input type="text" id="p-dir" placeholder="Barrio, calle..."></div>
+        <div><label>Precio domicilio ($)</label><input type="number" id="p-pdom" placeholder="0" min="0"></div>
+      </div>
+    </div>
+
+    <button class="btn bg" onclick="agregarProductoNP()" style="width:100%;margin-top:10px;">➕ Agregar producto</button>
 
     <div id="np-lista" style="margin-top:10px"></div>
 
     <div class="pb" id="p-box" style="display:none">
-      <div class="pl"><span>Domicilio:</span><span id="r-dom">$0</span></div>
       <div class="pt"><span class="pt-l">Total del pedido</span><span class="pt-v" id="r-precio">$0</span></div>
     </div>
 
@@ -1243,14 +1236,103 @@ function v(id){return document.getElementById(id).value.trim();}
 
 let productosNP = [];
 
+// Combina el catálogo (precio fijo) con las opciones personalizadas de siempre
+function productosDelCatalogoNP(){
+  const lista = [];
+  (typeof CATALOGO_PRODUCTOS!=='undefined'?CATALOGO_PRODUCTOS:[]).forEach(sec=>{
+    (sec.productos||[]).forEach(p=>{
+      if(!p.nombre) return;
+      const precio = (typeof precios!=='undefined' && precios[p.nombre] && precios[p.nombre].cliente) || p.precio || 0;
+      lista.push({nombre:p.nombre, precio});
+    });
+  });
+  (typeof FLORES!=='undefined'?FLORES:[]).forEach(f=>{
+    if(!f.nombre) return;
+    const precio = (typeof precios!=='undefined' && precios[f.nombre] && precios[f.nombre].cliente) || 0;
+    lista.push({nombre:f.nombre, precio});
+  });
+  return lista;
+}
+
+function poblarTipoNP(){
+  const sel = document.getElementById('p-tipo');
+  if(!sel) return;
+  const valorActual = sel.value;
+  const catalogo = productosDelCatalogoNP();
+  const opcionesGenericas = ['Ramo de flores','Ramo de rosas','Bouquet de flores','Bouquet de rosas','Ancheta de Flores','Ancheta','Girasol decorado','Rosa Decorada','Ramillete de rosas','Arreglo Fúnebre','Corona Fúnebre','Centro de mesa','Personalizado','Bouquet de rosas rojas','Arreglo con botella','Ramillete de rosas rosadas','Ramillete de rosas y girasoles','Ramo corazón','Ramo de flores y maní','Otro'];
+  let html = '<option value="">— Selecciona —</option>';
+  if(catalogo.length){
+    html += '<optgroup label="📦 Del catálogo (precio fijo)">';
+    html += catalogo.map(p=>`<option value="${p.nombre}" data-precio="${p.precio}" data-catalogo="1">${p.nombre} — $${p.precio.toLocaleString('es-CO')}</option>`).join('');
+    html += '</optgroup>';
+  }
+  html += '<optgroup label="✏️ Personalizado (tú pones el precio)">';
+  html += opcionesGenericas.map(o=>`<option value="${o}">${o}</option>`).join('');
+  html += '</optgroup>';
+  sel.innerHTML = html;
+  if(valorActual){ sel.value = valorActual; }
+}
+
+function onCambioTipoNP(){
+  const sel = document.getElementById('p-tipo');
+  const precioInput = document.getElementById('p-precio');
+  const hint = document.getElementById('p-precio-hint');
+  if(!sel || !precioInput) return;
+  const opt = sel.options[sel.selectedIndex];
+  if(opt && opt.dataset && opt.dataset.catalogo){
+    precioInput.value = opt.dataset.precio;
+    precioInput.readOnly = true;
+    precioInput.style.background = '#f3f3f1';
+    if(hint) hint.style.display = 'block';
+  } else {
+    precioInput.readOnly = false;
+    precioInput.style.background = '';
+    if(hint) hint.style.display = 'none';
+  }
+}
+
+// Desde el catálogo/destacados/flores: en vez de abrir un carrito aparte,
+// lleva a Nuevo Pedido con ese producto ya elegido y el precio bloqueado.
+function abrirPedir(nombre, precio){
+  ir('pedido');
+  setTimeout(()=>{
+    poblarTipoNP();
+    const sel = document.getElementById('p-tipo');
+    if(!sel) return;
+    let opt = Array.from(sel.options).find(o=>o.value===nombre);
+    if(!opt){
+      opt = document.createElement('option');
+      opt.value = nombre; opt.textContent = nombre;
+      opt.dataset.precio = precio; opt.dataset.catalogo = '1';
+      sel.appendChild(opt);
+    }
+    sel.value = nombre;
+    onCambioTipoNP();
+    notif('🌸 '+nombre+' listo — completa la entrega y agrégalo');
+    const fEntrega = document.getElementById('p-fecha');
+    if(fEntrega) fEntrega.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 150);
+}
+
 function agregarProductoNP(){
   const tipo=v('p-tipo'), detalle=v('p-detalle'), precio=n('p-precio');
+  const dest=v('p-dest'), celularDest=v('p-celular-dest');
+  const fecha=v('p-fecha'), hora=v('p-hora');
+  const domicilio=domOn, dir=v('p-dir'), pdom=domOn?n('p-pdom'):0;
+
   if(!tipo){ notif('⚠️ Selecciona el tipo de arreglo','err'); return; }
   if(!precio){ notif('⚠️ Escribe el precio o presupuesto','err'); return; }
-  productosNP.push({tipo, detalle, precio});
-  document.getElementById('p-tipo').value='';
-  document.getElementById('p-detalle').value='';
-  document.getElementById('p-precio').value='';
+  if(!fecha){ notif('⚠️ Falta la fecha de entrega de este producto','err'); return; }
+  if(!hora){ notif('⚠️ Falta la hora de entrega de este producto','err'); return; }
+  if(domicilio && !dir){ notif('⚠️ Falta la dirección de entrega','err'); return; }
+
+  productosNP.push({tipo, detalle, precio, dest, celularDest, fecha, hora, domicilio, dir, pdom});
+
+  ['p-tipo','p-detalle','p-precio','p-dest','p-celular-dest','p-hora','p-dir','p-pdom'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('p-fecha').value = hoy();
+  if(domOn) togDom();
   renderProductosNP();
   notif('✅ '+tipo+' agregado — ¿algo más?');
 }
@@ -1264,78 +1346,96 @@ function renderProductosNP(){
   const wrap=document.getElementById('np-lista'), box=document.getElementById('p-box');
   if(!wrap) return;
   if(!productosNP.length){ wrap.innerHTML=''; box.style.display='none'; return; }
-  wrap.innerHTML = productosNP.map((p,i)=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gris2);">
-      <div style="flex:1;min-width:0;">
+  wrap.innerHTML = productosNP.map((p,i)=>{
+    const fechaFmt = p.fecha ? new Date(p.fecha+'T00:00:00').toLocaleDateString('es-CO') : '';
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--gris2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="font-weight:700;font-size:.85rem;">${p.tipo}</div>
-        ${p.detalle?`<div style="font-size:.72rem;color:var(--gris);">${p.detalle}</div>`:''}
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-weight:700;color:var(--sol2);white-space:nowrap;">$${p.precio.toLocaleString('es-CO')}</span>
+          <button onclick="quitarProductoNP(${i})" style="background:none;border:none;color:var(--rojo);font-size:1.05rem;cursor:pointer;">🗑️</button>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span style="font-weight:700;color:var(--sol2);white-space:nowrap;">$${p.precio.toLocaleString('es-CO')}</span>
-        <button onclick="quitarProductoNP(${i})" style="background:none;border:none;color:var(--rojo);font-size:1.05rem;cursor:pointer;">🗑️</button>
+      ${p.detalle?`<div style="font-size:.72rem;color:var(--gris);">${p.detalle}</div>`:''}
+      <div style="font-size:.72rem;color:var(--gris);margin-top:3px;">
+        ${p.dest?'Para: '+p.dest+' · ':''}${fechaFmt} ${p.hora}${p.domicilio?' · 🛵 Domicilio $'+(p.pdom||0).toLocaleString('es-CO'):''}
       </div>
-    </div>`).join('');
-  const dom = domOn?n('p-pdom'):0;
-  const totalProductos = productosNP.reduce((s,p)=>s+p.precio,0);
-  document.getElementById('r-dom').textContent = '$'+dom.toLocaleString('es-CO');
-  document.getElementById('r-precio').textContent = '$'+(totalProductos+dom).toLocaleString('es-CO');
+    </div>`;
+  }).join('');
+  const total = productosNP.reduce((s,p)=>s+p.precio+(p.pdom||0),0);
+  document.getElementById('r-precio').textContent = '$'+total.toLocaleString('es-CO');
   box.style.display='block';
 }
 
 function enviarPedidoNP(){
-  const cliente=v('p-cliente'), celular=v('p-celular'), fecha=v('p-fecha'), hora=v('p-hora');
+  const cliente=v('p-cliente'), celular=v('p-celular'), fpago=v('p-fpago');
   if(!cliente){notif('⚠️ Falta el nombre del cliente','err');return;}
   if(!celular){notif('⚠️ Falta el celular','err');return;}
-  if(!fecha){notif('⚠️ Falta la fecha de entrega','err');return;}
-  if(!hora){notif('⚠️ Falta la hora de entrega','err');return;}
   if(!productosNP.length){notif('⚠️ Agrega al menos un producto','err');return;}
-  if(domOn && !v('p-dir')){notif('⚠️ Falta la dirección de entrega','err');return;}
 
-  const dom=domOn?n('p-pdom'):0;
-  const tipo = productosNP.map(p=>p.tipo).join(' + ');
-  const detalle = productosNP.map(p=> p.detalle ? `${p.tipo} (${p.detalle})` : p.tipo).join(', ');
-  const precio = productosNP.reduce((s,p)=>s+p.precio,0);
-  const codigo = 'GS-'+Math.random().toString(36).substr(2,4).toUpperCase();
+  const codigoBase = 'GS-'+Math.random().toString(36).substr(2,4).toUpperCase();
+  const idBase = Date.now();
+  const varios = productosNP.length > 1;
+  const codigosGenerados = [];
 
-  const p={
-    id:Date.now(), tipo, detalle, cliente,
-    celular, dest:v('p-dest'), celularDest:v('p-celular-dest'), fecha, hora,
-    domicilio:domOn, dir:v('p-dir'), pdom:dom,
-    precio, fpago:v('p-fpago'), saldo:Math.max(0,precio+dom),
-    estado:'Por confirmar', reg:new Date().toISOString(),
-    codigo
-  };
-  pedidos.push(p);
-  sl('gs3_pedidos',pedidos);
-  envGS(p,'pedido');
-  if(typeof db !== 'undefined') db.ref('pedidos/'+p.id).set(p);
-  fbSeguimiento(p);
+  productosNP.forEach((prod,i)=>{
+    const codigo = varios ? `${codigoBase}-${i+1}` : codigoBase;
+    codigosGenerados.push(codigo);
+    const p = {
+      id: idBase+i,
+      tipo: prod.tipo, detalle: prod.detalle, cliente, celular,
+      dest: prod.dest, celularDest: prod.celularDest,
+      fecha: prod.fecha, hora: prod.hora,
+      domicilio: prod.domicilio, dir: prod.dir, pdom: prod.pdom,
+      precio: prod.precio, fpago,
+      saldo: Math.max(0, prod.precio+(prod.pdom||0)),
+      estado: 'Por confirmar', reg: new Date().toISOString(),
+      codigo, codigoGrupo: codigoBase
+    };
+    pedidos.push(p);
+    sl('gs3_pedidos', pedidos);
+    envGS(p,'pedido');
+    if(typeof db !== 'undefined') db.ref('pedidos/'+p.id).set(p);
+    fbSeguimiento(p);
+  });
 
-  const celCli = celular, codPed = p.codigo;
+  const celCli = celular;
+  const primerProd = productosNP[0];
+  const resumenTipos = productosNP.map(p=>p.tipo).join(', ');
+  const subtotalNP = productosNP.reduce((s,p)=>s+p.precio,0);
+  const domicilioNP = productosNP.reduce((s,p)=>s+(p.pdom||0),0);
+  const detalleNP = productosNP.map(p=> p.detalle ? `${p.tipo} (${p.detalle})` : p.tipo).join(', ');
   limpiarPedido();
 
-  // Pantalla de éxito para cualquiera (cliente o staff) — nadie es redirigido a Gestión sin querer
-  const exitoEl = document.getElementById('pedir-exito');
-  if(exitoEl){
-    document.getElementById('exito-codigo').textContent = '🔑 Tu código: '+codPed;
-    exitoEl.style.display = 'flex';
-    setTimeout(()=>{ const sc=document.getElementById('seg-codigo'); if(sc) sc.value=codPed; }, 300);
+  if(fpago !== 'Efectivo'){
+    // Forma de pago requiere transferencia/depósito: mostrar pantalla con los datos bancarios
+    pantallaPago(codigosGenerados.join(' / '), subtotalNP, domicilioNP, '', detalleNP, cliente);
   } else {
-    notif('✅ Pedido de '+cliente+' registrado · Código: '+codPed);
+    const exitoEl = document.getElementById('pedir-exito');
+    const textoCodigos = codigosGenerados.join(' · ');
+    if(exitoEl){
+      document.getElementById('exito-codigo').textContent = varios ? '🔑 Tus códigos: '+textoCodigos : '🔑 Tu código: '+textoCodigos;
+      exitoEl.style.display = 'flex';
+      setTimeout(()=>{ const sc=document.getElementById('seg-codigo'); if(sc) sc.value=codigosGenerados[0]; }, 300);
+    } else {
+      notif('✅ Pedido de '+cliente+' registrado · Código'+(varios?'s':'')+': '+textoCodigos);
+    }
   }
 
   // WhatsApp al cliente si tiene celular
   if(celCli){
     const numLimpio = celCli.replace(/\D/g,'');
     const num = numLimpio.startsWith('57') ? numLimpio : '57'+numLimpio;
+    const lineaCodigos = varios
+      ? codigosGenerados.map((c,i)=>'• '+productosNP[i].tipo+': '+c).join('\n')
+      : '📋 *Tu código de seguimiento:* '+codigosGenerados[0];
     const msgCliente = encodeURIComponent(
       '🌻 *Girasoles Floristería*\n\n' +
       'Hola '+cliente+', tu pedido fue registrado con éxito.\n\n' +
-      '📋 *Tu código de seguimiento:* '+codPed+'\n' +
-      '📅 Entrega: '+fecha+' a las '+hora+'\n' +
-      '💐 '+tipo+'\n\n' +
-      '🔍 Consulta el estado de tu pedido en:\n' +
-      'https://floristeriagirasoles.netlify.app?cod='+codPed+'\n\n' +
+      lineaCodigos+'\n\n' +
+      '💐 '+resumenTipos+'\n\n' +
+      '🔍 Consulta el estado de cada pieza en:\n' +
+      'https://floristeriagirasoles.netlify.app\n\n' +
       '¡Gracias por elegir Girasoles! 🌻'
     );
     setTimeout(()=>{
@@ -1343,7 +1443,7 @@ function enviarPedidoNP(){
       const btnWa = document.createElement('div');
       btnWa.id = 'btn-wa-cliente';
       btnWa.innerHTML = `<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#25D366;color:#fff;padding:12px 22px;border-radius:14px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;z-index:999;box-shadow:0 4px 20px rgba(37,211,102,.4);display:flex;align-items:center;gap:8px;" onclick="window.open('${waUrl}','_blank');this.parentElement.remove();">
-        💬 Enviar código a cliente por WhatsApp
+        💬 Enviar código(s) a cliente por WhatsApp
       </div>`;
       document.body.appendChild(btnWa);
       setTimeout(()=>{ const b=document.getElementById('btn-wa-cliente'); if(b)b.remove(); }, 12000);
@@ -1543,192 +1643,9 @@ function fbEscucharFotosCot(){
   });
 }
 
-// ══════════ CARRITO DE COMPRAS ══════════
-let carrito = [];
-try{ const _cc=localStorage.getItem('girasoles_carrito'); if(_cc) carrito=JSON.parse(_cc)||[]; }catch(e){ carrito=[]; }
-function guardarCarrito(){ try{ localStorage.setItem('girasoles_carrito',JSON.stringify(carrito)); }catch(e){} actualizarBadgeCarrito(); }
-function totalCarrito(){ return carrito.reduce((s,i)=>s+(i.precio*i.cantidad),0); }
-function contarCarrito(){ return carrito.reduce((s,i)=>s+i.cantidad,0); }
-function actualizarBadgeCarrito(){
-  const n=contarCarrito();
-  const fab=document.getElementById('cart-fab'); if(fab) fab.style.display=n>0?'flex':'none';
-  const bdg=document.getElementById('cart-badge'); if(bdg) bdg.textContent=n;
-}
-function initCarritoFab(){
-  if(document.getElementById('cart-fab')) return;
-  const b=document.createElement('div'); b.id='cart-fab';
-  b.onclick=verCarrito;
-  b.style.cssText='position:fixed;right:16px;bottom:80px;z-index:940;width:58px;height:58px;border-radius:50%;background:#1a0900;color:#fff;display:none;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;';
-  b.innerHTML='🛒<span id="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#F5C518;color:#1a0900;font-size:.72rem;font-weight:800;min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:0 5px;">0</span>';
-  document.body.appendChild(b);
-}
-function _buscarFotoProd(nombre){
-  for(const s of (CATALOGO_PRODUCTOS||[])){ const p=(s.productos||[]).find(x=>x.nombre===nombre); if(p&&p.foto) return p.foto; }
-  if(typeof FLORES!=='undefined'){ const f=FLORES.find(x=>x.nombre===nombre); if(f&&f.foto) return f.foto; }
-  if(typeof FOTOS_COT!=='undefined' && FOTOS_COT[nombre]) return FOTOS_COT[nombre];
-  return '';
-}
-function agregarAlCarrito(nombre, precio, cantidad){
-  cantidad=parseInt(cantidad)||1;
-  const ex=carrito.find(x=>x.nombre===nombre);
-  if(ex){ ex.cantidad+=cantidad; } else { carrito.push({nombre, precio:Number(precio)||0, cantidad}); }
-  guardarCarrito();
-}
-
-// ── Modal "Pedir" (elegir cantidad) ──
-let _pedir=null;
-function abrirPedir(nombre, precio){
-  _pedir={nombre, precio:Number(precio)||0, cantidad:1};
-  const foto=_buscarFotoProd(nombre);
-  const ov=document.createElement('div'); ov.id='pedir-modal';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(26,9,0,.62);z-index:960;display:flex;align-items:flex-end;justify-content:center;';
-  ov.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:22px;">
-    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;"></div>
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
-      <div style="width:64px;height:64px;border-radius:12px;background:#f6f3ec;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem;">${foto?`<img src="${foto}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}</div>
-      <div style="flex:1;">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#1a0900;line-height:1.1;">${_esc(nombre)}</div>
-        <div style="font-size:.9rem;color:#C9920A;font-weight:700;margin-top:2px;">${_pedir.precio?('$'+_pedir.precio.toLocaleString('es-CO')+' c/u'):'Precio a confirmar'}</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:20px 0;">
-      <button onclick="_pedirCant(-1)" style="width:46px;height:46px;border-radius:50%;border:1.5px solid #e0d8c4;background:#faf8f2;font-size:1.5rem;font-weight:700;color:#1a0900;cursor:pointer;">−</button>
-      <span id="pedir-cant" style="font-size:1.7rem;font-weight:800;color:#1a0900;min-width:44px;text-align:center;">1</span>
-      <button onclick="_pedirCant(1)" style="width:46px;height:46px;border-radius:50%;border:1.5px solid #e0d8c4;background:#faf8f2;font-size:1.5rem;font-weight:700;color:#1a0900;cursor:pointer;">+</button>
-    </div>
-    <div id="pedir-total" style="text-align:center;font-size:.9rem;color:#1a0900;font-weight:700;margin-bottom:16px;"></div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="document.getElementById('pedir-modal').remove()" style="flex:1;background:#f3f3f1;border:none;border-radius:12px;padding:14px;font-weight:600;color:#555;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
-      <button onclick="_pedirAgregar()" style="flex:2;background:#1a0900;border:none;border-radius:12px;padding:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">🛒 Agregar</button>
-    </div>
-  </div>`;
-  document.body.appendChild(ov); _pedirTotal();
-}
-function _pedirCant(d){ _pedir.cantidad=Math.max(1,_pedir.cantidad+d); document.getElementById('pedir-cant').textContent=_pedir.cantidad; _pedirTotal(); }
-function _pedirTotal(){ const t=document.getElementById('pedir-total'); if(t) t.textContent=_pedir.precio?('Total: $'+(_pedir.precio*_pedir.cantidad).toLocaleString('es-CO')):''; }
-function _pedirAgregar(){ agregarAlCarrito(_pedir.nombre,_pedir.precio,_pedir.cantidad); document.getElementById('pedir-modal').remove(); notif('🛒 Agregado al carrito'); verCarrito(); }
-
-// ── Vista del carrito ──
-function verCarrito(){
-  const ex=document.getElementById('carrito-modal'); if(ex) ex.remove();
-  const ov=document.createElement('div'); ov.id='carrito-modal';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(26,9,0,.62);z-index:958;display:flex;align-items:flex-end;justify-content:center;';
-  let filas = carrito.length ? carrito.map((it,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0ede6;">
-      <div style="flex:1;">
-        <div style="font-weight:700;color:#1a0900;font-size:.9rem;">${_esc(it.nombre)}</div>
-        <div style="font-size:.75rem;color:#8a7a5a;">${it.precio?('$'+it.precio.toLocaleString('es-CO')+' c/u'):'Precio a confirmar'}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="_carrCant(${i},-1)" style="width:30px;height:30px;border-radius:50%;border:1px solid #e0d8c4;background:#faf8f2;font-weight:700;cursor:pointer;">−</button>
-        <span style="min-width:22px;text-align:center;font-weight:700;">${it.cantidad}</span>
-        <button onclick="_carrCant(${i},1)" style="width:30px;height:30px;border-radius:50%;border:1px solid #e0d8c4;background:#faf8f2;font-weight:700;cursor:pointer;">+</button>
-      </div>
-      <button onclick="_carrQuitar(${i})" style="background:none;border:none;color:#c0392b;font-size:1.1rem;cursor:pointer;">🗑️</button>
-    </div>`).join('') : '<div style="text-align:center;color:#999;padding:30px 0;">Tu carrito está vacío 🛒</div>';
-  ov.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:22px;">
-    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 12px;"></div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:#1a0900;margin-bottom:10px;">🛒 Tu pedido</div>
-    ${filas}
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0;padding-top:12px;border-top:2px solid #1a0900;">
-      <span style="font-weight:700;color:#1a0900;">Total</span>
-      <span style="font-size:1.3rem;font-weight:800;color:#C9920A;">$${totalCarrito().toLocaleString('es-CO')}</span>
-    </div>
-    <button onclick="document.getElementById('carrito-modal').remove()" style="width:100%;background:#f3f3f1;border:none;border-radius:12px;padding:12px;font-weight:600;color:#555;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px;">Seguir agregando</button>
-    ${carrito.length?`<button onclick="abrirCheckout()" style="width:100%;background:#1a0900;border:none;border-radius:12px;padding:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.95rem;">Enviar pedido →</button>`:''}
-  </div>`;
-  document.body.appendChild(ov);
-}
-function _carrCant(i,d){ carrito[i].cantidad=Math.max(1,carrito[i].cantidad+d); guardarCarrito(); verCarrito(); }
-function _carrQuitar(i){ carrito.splice(i,1); guardarCarrito(); verCarrito(); }
-
-// ── Checkout: datos del cliente ──
-function abrirCheckout(){
-  const c=document.getElementById('carrito-modal'); if(c) c.remove();
-  const inp="width:100%;border:1px solid #e0e0e0;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;margin-bottom:11px;box-sizing:border-box;";
-  const lbl="font-size:.62rem;font-weight:800;color:#9a6f08;text-transform:uppercase;letter-spacing:1px;margin:2px 0 6px;display:block;";
-  const ov=document.createElement('div'); ov.id='checkout-modal';
-  ov.style.cssText='position:fixed;inset:0;background:rgba(26,9,0,.62);z-index:959;display:flex;align-items:flex-end;justify-content:center;';
-  ov.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:22px;">
-    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 12px;"></div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:#1a0900;margin-bottom:2px;">Datos del pedido 🌻</div>
-    <div style="font-size:.78rem;color:#7a6a4a;margin-bottom:16px;">Cuéntanos quién pide y a dónde va.</div>
-
-    <label style="${lbl}">Quien hace el pedido</label>
-    <input id="ck-nombre" placeholder="Tu nombre" style="${inp}">
-    <input id="ck-celular" type="tel" placeholder="Tu celular / WhatsApp" style="${inp}">
-
-    <label style="${lbl}">Entrega</label>
-    <select id="ck-entrega" onchange="_ckToggleEntrega()" style="${inp}">
-      <option value="domicilio">🛵 Domicilio</option>
-      <option value="tienda">🏪 Recoge en la tienda</option>
-    </select>
-
-    <div id="ck-dom">
-      <label style="${lbl}">¿Para quién es?</label>
-      <input id="ck-dest-nombre" placeholder="Nombre de quien recibe" style="${inp}">
-      <input id="ck-dest-cel" type="tel" placeholder="Celular de quien recibe" style="${inp}">
-      <input id="ck-dir" placeholder="Dirección de entrega" style="${inp}">
-      <label style="${lbl}">Zona</label>
-      <select id="ck-zona" onchange="_ckZona()" style="${inp}">
-        <option value="turbo">En Turbo · +$6.000</option>
-        <option value="fuera">Fuera de Turbo</option>
-      </select>
-      <div id="ck-zona-nota" style="display:none;font-size:.74rem;color:#8a6010;background:#fff7e0;border:1px solid #f0d890;border-radius:8px;padding:9px;margin-bottom:11px;">💬 El costo del domicilio fuera de Turbo se te informa por WhatsApp al confirmar.</div>
-    </div>
-
-    <label style="${lbl}">Fecha y hora de entrega</label>
-    <div style="display:flex;gap:8px;margin-bottom:11px;">
-      <input id="ck-fecha" type="date" style="flex:1;border:1px solid #e0e0e0;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;box-sizing:border-box;">
-      <input id="ck-hora" type="time" style="flex:1;border:1px solid #e0e0e0;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;box-sizing:border-box;">
-    </div>
-
-    <label style="${lbl}">Dedicatoria / mensaje de tarjeta</label>
-    <textarea id="ck-nota" rows="2" placeholder="Ej: Feliz cumpleaños mamá ❤️ (opcional)" style="${inp}"></textarea>
-    <div style="display:flex;gap:8px;margin-top:4px;">
-      <button onclick="document.getElementById('checkout-modal').remove();verCarrito()" style="flex:1;background:#f3f3f1;border:none;border-radius:12px;padding:14px;font-weight:600;color:#555;cursor:pointer;font-family:'DM Sans',sans-serif;">Atrás</button>
-      <button onclick="confirmarPedidoCarrito()" style="flex:2;background:#1a0900;border:none;border-radius:12px;padding:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Ir a pagar →</button>
-    </div>
-  </div>`;
-  document.body.appendChild(ov);
-}
-function _ckToggleEntrega(){ const dom=document.getElementById('ck-dom'); const v=document.getElementById('ck-entrega').value; if(dom) dom.style.display = v==='domicilio'?'block':'none'; }
-function _ckZona(){ const n=document.getElementById('ck-zona-nota'); const v=document.getElementById('ck-zona').value; if(n) n.style.display = v==='fuera'?'block':'none'; }
-function confirmarPedidoCarrito(){
-  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
-  const nombre=g('ck-nombre'), celular=g('ck-celular'), nota=g('ck-nota');
-  if(!nombre||!celular){ notif('⚠️ Escribe tu nombre y celular','err'); return; }
-  const entrega=g('ck-entrega');
-  const fechaEntrega=g('ck-fecha'), horaEntrega=g('ck-hora');
-  if(!fechaEntrega){ notif('⚠️ Elige la fecha de entrega','err'); return; }
-  if(!horaEntrega){ notif('⚠️ Elige la hora de entrega','err'); return; }
-  let destNombre='', destCel='', dir='', zona='', domicilio=0, domNota='';
-  if(entrega==='domicilio'){
-    destNombre=g('ck-dest-nombre'); destCel=g('ck-dest-cel'); dir=g('ck-dir'); zona=g('ck-zona');
-    if(!dir){ notif('⚠️ Escribe la dirección de entrega','err'); return; }
-    if(zona==='turbo'){ domicilio=6000; } else { domNota='Domicilio fuera de Turbo: costo se informa por WhatsApp'; }
-  }
-  const codigo='PED-'+Date.now().toString(36).toUpperCase().slice(-5);
-  const detalle=carrito.map(i=>`${i.nombre} x${i.cantidad}`).join(', ');
-  const subtotal=totalCarrito();
-  const total=subtotal+domicilio;
-  const p={ id:Date.now(), codigo, cliente:nombre, celular,
-            entrega, dest:destNombre, celularDest:destCel, dir, zona, domicilio, domNota,
-            fechaEntrega, horaEntrega, fecha:fechaEntrega, hora:horaEntrega,
-            detalle, subtotal, total, precio:total, nota,
-            estado:'Nuevo', reg:new Date().toISOString(), fechaPedido:new Date().toLocaleDateString('es-CO') };
-  try{ if(typeof db!=='undefined' && db) db.ref('pedidos/'+p.id).set(p); }catch(e){ console.warn('fb pedido',e); }
-  try{ if(typeof fbSeguimiento==='function') fbSeguimiento(p); }catch(e){}
-  envGS(p,'pedido');
-  const cm=document.getElementById('checkout-modal'); if(cm) cm.remove();
-  pantallaPago(codigo, subtotal, domicilio, domNota, detalle, nombre);
-}
-
-// ── Pantalla de pago ──
 const PAGO = { banco:'Bancolombia', tipo:'Ahorros', cuenta:'95989112300', titular:'Karol Otagri', llave:'3122748613', wa:'573122748613' };
 function _copiar(txt){ try{ navigator.clipboard.writeText(txt); notif('📋 Copiado'); }catch(e){ notif('Cópialo manualmente: '+txt); } }
 function pantallaPago(codigo, subtotal, domicilio, domNota, detalle, nombre){
-  carrito=[]; guardarCarrito();
   const total=subtotal+(domicilio||0);
   const ov=document.createElement('div'); ov.id='pago-modal';
   ov.style.cssText='position:fixed;inset:0;background:rgba(26,9,0,.72);z-index:962;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
@@ -2722,6 +2639,10 @@ function renderPromos(){
         <div style="font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:600;color:#1a0900;line-height:1.25;margin-bottom:3px;">${_esc(p.titulo)}</div>
         <div style="font-size:.72rem;color:#5a4a30;line-height:1.45;">${_esc(p.texto)}</div>
         ${p.etiqueta?`<span style="display:inline-block;background:${t.bBg};color:${t.bC};font-size:.6rem;padding:2px 9px;border-radius:10px;margin-top:5px;font-weight:600;letter-spacing:1px;">${_esc(p.etiqueta)}</span>`:''}
+        ${p.precio>0?`<div style="margin-top:7px;display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:${t.bC};">$${p.precio.toLocaleString('es-CO')}</span>
+          <button onclick="abrirPedir('${(p.titulo||'').replace(/'/g,"\\'")}', ${p.precio})" style="background:#1a0900;color:#fff;border:none;border-radius:9px;padding:6px 14px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🛒 Pedir</button>
+        </div>`:''}
       </div></div>`;
   }).join('');
 }
@@ -2770,6 +2691,7 @@ function _promosRender(){
       <input class="pm-cintillo" data-i="${i}" placeholder="Cintillo (ej: Cada lunes)" style="${inp}" value="${_attr(p.cintillo)}">
       <input class="pm-titulo" data-i="${i}" placeholder="Título" style="${inp}" value="${_attr(p.titulo)}">
       <textarea class="pm-texto" data-i="${i}" placeholder="Descripción" rows="2" style="${inp}">${_esc(p.texto)}</textarea>
+      <input class="pm-precio" data-i="${i}" type="number" min="0" placeholder="Precio ($) — 0 = sin botón de pedir" style="${inp}" value="${p.precio||''}">
       <input class="pm-etiqueta" data-i="${i}" placeholder="Etiqueta pequeña (opcional)" style="${inp}" value="${_attr(p.etiqueta)}">
       <select class="pm-tono" data-i="${i}" style="${inp}">
         <option value="amarillo"${p.tono==='amarillo'?' selected':''}>Color amarillo</option>
@@ -2783,6 +2705,7 @@ function _promoSync(){
   document.querySelectorAll('#promos-editor .pm-cintillo').forEach(el=>{_promosTmp[+el.dataset.i].cintillo=el.value;});
   document.querySelectorAll('#promos-editor .pm-titulo').forEach(el=>{_promosTmp[+el.dataset.i].titulo=el.value;});
   document.querySelectorAll('#promos-editor .pm-texto').forEach(el=>{_promosTmp[+el.dataset.i].texto=el.value;});
+  document.querySelectorAll('#promos-editor .pm-precio').forEach(el=>{_promosTmp[+el.dataset.i].precio=parseFloat(el.value)||0;});
   document.querySelectorAll('#promos-editor .pm-etiqueta').forEach(el=>{_promosTmp[+el.dataset.i].etiqueta=el.value;});
   document.querySelectorAll('#promos-editor .pm-tono').forEach(el=>{_promosTmp[+el.dataset.i].tono=el.value;});
 }
@@ -2792,7 +2715,7 @@ function _promoFoto(i,input){
   _resizeImg(f,d=>{ _promosTmp[i].foto=d; _promosRender(); });
 }
 function _promoQuitarFoto(i){ _promoSync(); delete _promosTmp[i].foto; _promosRender(); }
-function _promoAdd(){ _promoSync(); _promosTmp.push({tono:'amarillo',emoji:'🌸',foto:'',cintillo:'',titulo:'Nueva promoción',texto:'',etiqueta:''}); _promosRender(); }
+function _promoAdd(){ _promoSync(); _promosTmp.push({tono:'amarillo',emoji:'🌸',foto:'',cintillo:'',titulo:'Nueva promoción',texto:'',etiqueta:'',precio:0}); _promosRender(); }
 function _promoDel(i){ _promoSync(); _promosTmp.splice(i,1); _promosRender(); }
 function _promosGuardar(){
   _promoSync();
@@ -2932,6 +2855,7 @@ function fbCargarPrecios() {
       // Actualizar UI si estamos en esas pestañas
       if (document.getElementById('precios').classList.contains('on')) renderPrecios();
       if (document.getElementById('cotizador').classList.contains('on')) renderCotizador();
+      try{ poblarTipoNP(); }catch(e){}
     }
   });
 }
@@ -3320,6 +3244,7 @@ function fbCargarCatalogo() {
       CATALOGO_PRODUCTOS = _normalizarCatalogo(data);
       try{ localStorage.setItem('girasoles_catalogo', JSON.stringify(CATALOGO_PRODUCTOS)); }catch(e){}
       if (document.getElementById('catalogo').classList.contains('on')) renderCatalogo();
+      try{ poblarTipoNP(); }catch(e){}
     }
   });
 }
@@ -3338,6 +3263,7 @@ function fbCargarFlores() {
       FLORES = data;
       try{ localStorage.setItem('girasoles_flores', JSON.stringify(FLORES)); }catch(e){}
       if (document.getElementById('flores').classList.contains('on')) renderFlores();
+      try{ poblarTipoNP(); }catch(e){}
     }
   });
 }
@@ -3953,12 +3879,12 @@ window.addEventListener('load', () => {
   try{ fbEscucharContenido(); }catch(e){ console.warn('fbEscucharContenido', e); }
   try{ reintentarColaGS(); }catch(e){ console.warn('reintentarColaGS', e); }
   try{ fbEscucharFotosCot(); }catch(e){ console.warn('fbEscucharFotosCot', e); }
-  try{ initCarritoFab(); actualizarBadgeCarrito(); }catch(e){ console.warn('carrito', e); }
+  try{ poblarTipoNP(); }catch(e){ console.warn('poblarTipoNP', e); }
 
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v27' : '🔥 Firebase (local) v27';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v28' : '🔥 Firebase (local) v28';
   }
 });
 </script>
