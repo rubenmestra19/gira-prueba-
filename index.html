@@ -1528,7 +1528,7 @@ function renderGestion(){
   }).join('');
 }
 
-function markEnt(id){const p=pedidos.find(x=>x.id===id);if(p){p.estado='Entregado';sl('gs3_pedidos',pedidos);renderGestion();notif('✔ Marcado como entregado');}}
+function markEnt(id){ chEst(id, 'Entregado'); notif('✔ Marcado como entregado'); }
 function chEst(id,est){
   const p=pedidos.find(x=>x.id===id);
   if(p){
