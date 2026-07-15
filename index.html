@@ -76,6 +76,13 @@ textarea{resize:vertical;min-height:62px}
 
 /* PAGO BOX */
 .pb{background:#fffbee;border:1.5px solid rgba(245,197,24,.45);border-radius:14px;padding:15px 17px;margin-top:13px}
+.inv-btn{background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px 10px;font-weight:700;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;line-height:1.3}
+.inv-modal{display:none;position:fixed;inset:0;background:rgba(26,9,0,.72);z-index:955;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.inv-modal.on{display:flex}
+.inv-modal-box{background:#fff;border-radius:18px;max-width:520px;width:100%;padding:22px;margin:20px 0}
+.inv-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.inv-modal-head h3{font-family:'Cormorant Garamond',serif;font-size:1.35rem;margin:0;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.inv-modal-head button{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--gris)}
 .pl{display:flex;justify-content:space-between;font-size:.86rem;padding:4px 0;color:var(--cafe2)}
 .pt{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1.5px dashed rgba(245,197,24,.4)}
 .pt-l{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cafe2)}
@@ -840,107 +847,136 @@ textarea{resize:vertical;min-height:62px}
 <div class="pg" id="inventario">
   <div class="lkb"><span class="lki">📦</span><div><div class="lkh">Inventario — Compras por Caja</div><div class="lks">Compras por caja, vendes por unidad. Aquí calculamos costo unitario y utilidad automáticamente.</div></div></div>
 
-  <div class="card" style="display:flex;gap:10px;">
-    <button onclick="abrirModalProveedor()" style="flex:1;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar proveedor</button>
-    <button onclick="abrirModalInsumo()" style="flex:1;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar insumo</button>
-  </div>
-
   <div class="card">
-    <p class="ch">Registrar orden de compra</p>
-    <p class="cs">Un proveedor, una fecha, y agrega todos los insumos que compraste en ese viaje. Al final se guarda como una sola orden — y se registra el gasto en Caja automáticamente.</p>
-
-    <div class="r2">
-      <div><label>Proveedor *</label><select id="inv-proveedor"><option value="">— Selecciona —</option></select></div>
-      <div><label>Fecha de compra</label><input type="date" id="inv-fecha"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="abrirModalProveedor()" class="inv-btn">➕ Agregar proveedor</button>
+      <button onclick="abrirModalInsumo()" class="inv-btn">➕ Agregar insumo</button>
+      <button onclick="_abrirModalInv('modal-orden-compra')" class="inv-btn">📝 Registrar orden de compra</button>
+      <button onclick="_abrirModalInv('modal-descontar')" class="inv-btn">📉 Descontar materiales</button>
+      <button onclick="_abrirModalInv('modal-stock')" class="inv-btn">📦 Stock actual</button>
+      <button onclick="_abrirModalInv('modal-prov-compras')" class="inv-btn">🏪 Compras por proveedor</button>
+      <button onclick="_abrirModalInv('modal-comparar')" class="inv-btn">💰 Comparar precios</button>
+      <button onclick="_abrirModalInv('modal-seguimiento')" class="inv-btn">📊 Seguimiento</button>
+      <button onclick="_abrirModalInv('modal-historial')" class="inv-btn">📋 Historial de compras</button>
     </div>
-    <div><label>Referencia / N° de factura (opcional)</label><input type="text" id="inv-referencia" placeholder="Ej: Factura 0234"></div>
-
-    <span class="sl">Agregar insumo a esta orden</span>
-    <div class="r2">
-      <div><label>Insumo / Producto *</label><select id="inv-nombre" onchange="checkPrecioSync();_autocompletarUnidadInsumo()"><option value="">— Selecciona —</option></select></div>
-      <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" value="unidad" readonly style="background:#f3f3f1"></div>
-    </div>
-    <div class="r3">
-      <div><label>Costo por caja / paquete / docena ($) *</label><input type="text" inputmode="numeric" id="inv-costo" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
-      <div><label>Unidades por caja / paquete / docena *</label><input type="number" id="inv-unidades" placeholder="0" min="1" oninput="calcInvPreview()"></div>
-      <div><label>¿Cuántas cajas / paquetes / docenas? *</label><input type="number" id="inv-cantcajas" placeholder="1" min="1" value="1" oninput="calcInvPreview()"></div>
-    </div>
-    <div class="r2">
-      <div><label>Precio de venta por unidad ($)</label><input type="text" inputmode="numeric" id="inv-pventa" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
-    </div>
-    <div id="inv-precio-sync" style="display:none;font-size:.74rem;color:var(--cafe2);background:var(--crema2);border-radius:10px;padding:8px 12px;margin-top:8px;"></div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="inv-sync-costo" style="width:auto;">
-      <label style="margin:0;text-transform:none;font-weight:400;font-size:.78rem;color:var(--cafe2);" for="inv-sync-costo">Actualizar el costo interno en Precios con este costo unitario</label>
-    </div>
-
-    <div class="pb" id="inv-preview" style="display:none">
-      <div class="pl"><span>Costo unitario:</span><span id="inv-r-costou">$0</span></div>
-      <div class="pl"><span>Total de esta línea (todas las cajas):</span><span id="inv-r-totallinea">$0</span></div>
-      <div class="pl"><span>Utilidad por unidad:</span><span id="inv-r-util">$0</span></div>
-      <div class="pt"><span class="pt-l">Margen</span><span class="pt-v" id="inv-r-margen">0%</span></div>
-    </div>
-
-    <button onclick="agregarInsumoOrden()" style="width:100%;margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar insumo a la orden</button>
-
-    <div id="orden-lista" style="margin-top:10px"></div>
-    <div class="pb" id="orden-total-box" style="display:none">
-      <div class="pt"><span class="pt-l">Total de la orden</span><span class="pt-v" id="orden-total">$0</span></div>
-    </div>
-
-    <button onclick="guardarOrdenCompra()" style="width:100%;margin-top:16px;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar orden de compra</button>
   </div>
 
   <datalist id="lista-insumos"></datalist>
 
-  <div class="card">
-    <p class="ch">Descontar materiales — Armado de trabajo</p>
+  <!-- MODAL: Registrar orden de compra -->
+  <div id="modal-orden-compra" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Registrar orden de compra</h3><button onclick="_cerrarModalInv('modal-orden-compra')">✕</button></div>
+      <p class="cs">Un proveedor, una fecha, y agrega todos los insumos que compraste en ese viaje. Al final se guarda como una sola orden — y se registra el gasto en Caja automáticamente.</p>
 
-    <p class="cs">Registra lo que realmente usaste en este arreglo (varía por color y gusto del cliente). Se descuenta del inventario al instante, en todos los dispositivos.</p>
+      <div class="r2">
+        <div><label>Proveedor *</label><select id="inv-proveedor"><option value="">— Selecciona —</option></select></div>
+        <div><label>Fecha de compra</label><input type="date" id="inv-fecha"></div>
+      </div>
+      <div><label>Referencia / N° de factura (opcional)</label><input type="text" id="inv-referencia" placeholder="Ej: Factura 0234"></div>
 
-    <div class="r2">
-      <div><label>Referencia (cliente o pedido)</label><input type="text" id="desc-nota" placeholder="Ej: Ramo para María / GS-0123"></div>
-      <div><label>Fecha</label><input type="date" id="desc-fecha"></div>
+      <span class="sl">Agregar insumo a esta orden</span>
+      <div class="r2">
+        <div><label>Insumo / Producto *</label><select id="inv-nombre" onchange="checkPrecioSync();_autocompletarUnidadInsumo()"><option value="">— Selecciona —</option></select></div>
+        <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" value="unidad" readonly style="background:#f3f3f1"></div>
+      </div>
+      <div class="r3">
+        <div><label>Costo por caja / paquete / docena ($) *</label><input type="text" inputmode="numeric" id="inv-costo" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
+        <div><label>Unidades por caja / paquete / docena *</label><input type="number" id="inv-unidades" placeholder="0" min="1" oninput="calcInvPreview()"></div>
+        <div><label>¿Cuántas cajas / paquetes / docenas? *</label><input type="number" id="inv-cantcajas" placeholder="1" min="1" value="1" oninput="calcInvPreview()"></div>
+      </div>
+      <div class="r2">
+        <div><label>Precio de venta por unidad ($)</label><input type="text" inputmode="numeric" id="inv-pventa" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
+      </div>
+      <div id="inv-precio-sync" style="display:none;font-size:.74rem;color:var(--cafe2);background:var(--crema2);border-radius:10px;padding:8px 12px;margin-top:8px;"></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="inv-sync-costo" style="width:auto;">
+        <label style="margin:0;text-transform:none;font-weight:400;font-size:.78rem;color:var(--cafe2);" for="inv-sync-costo">Actualizar el costo interno en Precios con este costo unitario</label>
+      </div>
+
+      <div class="pb" id="inv-preview" style="display:none">
+        <div class="pl"><span>Costo unitario:</span><span id="inv-r-costou">$0</span></div>
+        <div class="pl"><span>Total de esta línea (todas las cajas):</span><span id="inv-r-totallinea">$0</span></div>
+        <div class="pl"><span>Utilidad por unidad:</span><span id="inv-r-util">$0</span></div>
+        <div class="pt"><span class="pt-l">Margen</span><span class="pt-v" id="inv-r-margen">0%</span></div>
+      </div>
+
+      <button onclick="agregarInsumoOrden()" style="width:100%;margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar insumo a la orden</button>
+
+      <div id="orden-lista" style="margin-top:10px"></div>
+      <div class="pb" id="orden-total-box" style="display:none">
+        <div class="pt"><span class="pt-l">Total de la orden</span><span class="pt-v" id="orden-total">$0</span></div>
+      </div>
+
+      <button onclick="guardarOrdenCompra()" style="width:100%;margin-top:16px;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar orden de compra</button>
     </div>
-
-    <div id="desc-filas"></div>
-    <button onclick="addDescRow()" style="margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar material</button>
-
-    <button onclick="confirmarDescuento()" style="width:100%;margin-top:16px;background:var(--sol);color:#1a0900;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">📉 Descontar del inventario</button>
   </div>
 
-  <div class="card">
-    <p class="ch">Stock actual</p>
-    <p class="cs">Comprado menos consumido, en tiempo real.</p>
-    <div id="stock-lista"></div>
+  <!-- MODAL: Descontar materiales -->
+  <div id="modal-descontar" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Descontar materiales — Armado de trabajo</h3><button onclick="_cerrarModalInv('modal-descontar')">✕</button></div>
+      <p class="cs">Registra lo que realmente usaste en este arreglo (varía por color y gusto del cliente). Se descuenta del inventario al instante, en todos los dispositivos.</p>
+
+      <div class="r2">
+        <div><label>Referencia (cliente o pedido)</label><input type="text" id="desc-nota" placeholder="Ej: Ramo para María / GS-0123"></div>
+        <div><label>Fecha</label><input type="date" id="desc-fecha"></div>
+      </div>
+
+      <div id="desc-filas"></div>
+      <button onclick="addDescRow()" style="margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar material</button>
+
+      <button onclick="confirmarDescuento()" style="width:100%;margin-top:16px;background:var(--sol);color:#1a0900;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">📉 Descontar del inventario</button>
+    </div>
   </div>
 
-  <div class="card">
-    <p class="ch">Compras por proveedor</p>
-    <p class="cs">Toca el nombre de un proveedor para ver todas sus órdenes y el estado de pago de cada una.</p>
-    <div id="proveedores-lista"></div>
+  <!-- MODAL: Stock actual -->
+  <div id="modal-stock" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Stock actual</h3><button onclick="_cerrarModalInv('modal-stock')">✕</button></div>
+      <p class="cs">Comprado menos consumido, en tiempo real.</p>
+      <div id="stock-lista"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <p class="ch">Comparar precios entre proveedores</p>
-    <p class="cs">Elige un insumo y compara qué te cobró cada proveedor la última vez — para saber quién te conviene más.</p>
-    <select id="comp-insumo" onchange="renderCompararPrecios()">
-      <option value="">— Selecciona un insumo —</option>
-    </select>
-    <div id="comp-resultado" style="margin-top:12px"></div>
+  <!-- MODAL: Compras por proveedor -->
+  <div id="modal-prov-compras" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Compras por proveedor</h3><button onclick="_cerrarModalInv('modal-prov-compras')">✕</button></div>
+      <p class="cs">Toca el nombre de un proveedor para ver todas sus órdenes y el estado de pago de cada una.</p>
+      <div id="proveedores-lista"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <p class="ch">Seguimiento</p>
-    <p class="cs">Cada cuánto compras cada insumo y cuándo se te agotará al ritmo actual de consumo.</p>
-    <div id="seg-lista"></div>
+  <!-- MODAL: Comparar precios -->
+  <div id="modal-comparar" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Comparar precios entre proveedores</h3><button onclick="_cerrarModalInv('modal-comparar')">✕</button></div>
+      <p class="cs">Elige un insumo y compara qué te cobró cada proveedor la última vez — para saber quién te conviene más.</p>
+      <select id="comp-insumo" onchange="renderCompararPrecios()">
+        <option value="">— Selecciona un insumo —</option>
+      </select>
+      <div id="comp-resultado" style="margin-top:12px"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <p class="ch">Historial de compras</p>
-    <p class="cs">Todas las cajas registradas, más recientes primero.</p>
-    <div id="inv-resumen" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
-    <div id="inv-lista"></div>
+  <!-- MODAL: Seguimiento -->
+  <div id="modal-seguimiento" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Seguimiento</h3><button onclick="_cerrarModalInv('modal-seguimiento')">✕</button></div>
+      <p class="cs">Cada cuánto compras cada insumo y cuándo se te agotará al ritmo actual de consumo.</p>
+      <div id="seg-lista"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Historial de compras -->
+  <div id="modal-historial" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Historial de compras</h3><button onclick="_cerrarModalInv('modal-historial')">✕</button></div>
+      <p class="cs">Todas las cajas registradas, más recientes primero.</p>
+      <div id="inv-resumen" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+      <div id="inv-lista"></div>
+    </div>
   </div>
 </div>
 
@@ -949,27 +985,32 @@ textarea{resize:vertical;min-height:62px}
   <div class="card">
     <p class="ch">⚙️ Administrar Productos</p>
     <p class="cs">Agrega, desactiva o edita productos. Los cambios aplican al cotizador y precios.</p>
-    <div class="adm-add">
-      <h4>➕ Agregar producto nuevo</h4>
-      <div class="r2">
-        <div><label>Nombre *</label><input type="text" id="a-nom" placeholder="Ej: Tulipán rosado"></div>
-        <div>
-          <label>Categoría *</label>
-          <select id="a-cat">
-            <option>🌹 Rosas</option><option>🌼 Margaritas</option><option>🌸 Pompón</option>
-            <option>🌺 Pinocho</option><option>🌻 Flores</option><option>🌿 Follaje</option>
-            <option>🎁 Anchetas</option><option>✨ Otros</option>
-          </select>
-        </div>
-      </div>
-      <div class="r2">
-        <div><label>Precio interno ($)</label><input type="number" id="a-int" placeholder="Tu costo" min="0"></div>
-        <div><label>Precio cliente ($)</label><input type="number" id="a-cli" placeholder="Lo que cobras" min="0"></div>
-      </div>
-      <button class="btn bs" style="margin-top:13px" onclick="addProd()">➕ Agregar al catálogo</button>
-    </div>
+    <button onclick="_abrirModalInv('modal-agregar-producto')" class="inv-btn" style="width:100%;margin-bottom:14px;">➕ Agregar producto nuevo</button>
     <div style="font-weight:700;color:var(--cafe2);margin-bottom:9px;font-size:.88rem">📋 Catálogo actual</div>
     <div id="a-lista"></div>
+  </div>
+</div>
+
+<!-- MODAL: Agregar producto nuevo -->
+<div id="modal-agregar-producto" class="inv-modal">
+  <div class="inv-modal-box">
+    <div class="inv-modal-head"><h3>Agregar producto nuevo</h3><button onclick="_cerrarModalInv('modal-agregar-producto')">✕</button></div>
+    <div class="r2">
+      <div><label>Nombre *</label><input type="text" id="a-nom" placeholder="Ej: Tulipán rosado"></div>
+      <div>
+        <label>Categoría *</label>
+        <select id="a-cat">
+          <option>🌹 Rosas</option><option>🌼 Margaritas</option><option>🌸 Pompón</option>
+          <option>🌺 Pinocho</option><option>🌻 Flores</option><option>🌿 Follaje</option>
+          <option>🎁 Anchetas</option><option>✨ Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="r2">
+      <div><label>Precio interno ($)</label><input type="number" id="a-int" placeholder="Tu costo" min="0"></div>
+      <div><label>Precio cliente ($)</label><input type="number" id="a-cli" placeholder="Lo que cobras" min="0"></div>
+    </div>
+    <button class="btn bs" style="margin-top:13px" onclick="addProd()">➕ Agregar al catálogo</button>
   </div>
 </div>
 
@@ -1065,39 +1106,45 @@ textarea{resize:vertical;min-height:62px}
     <p>Registra y gestiona suscripciones activas</p>
   </div>
 
-  <!-- FORMULARIO NUEVA SUSCRIPCIÓN -->
-  <div class="card">
-    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--cafe);margin-bottom:14px;">➕ Nueva suscripción</h3>
+  <div style="padding:0 16px;">
+    <button onclick="_abrirModalInv('modal-nueva-sub')" class="inv-btn" style="width:100%;">➕ Nueva suscripción</button>
+  </div>
 
-    <div class="r2">
-      <div><label>Suscriptor *</label><input type="text" id="sub-cli" placeholder="Nombre completo"></div>
-      <div><label>Celular *</label><input type="tel" id="sub-cel" placeholder="310 000 0000"></div>
+  <!-- MODAL: Nueva suscripción -->
+  <div id="modal-nueva-sub" class="inv-modal">
+    <div class="inv-modal-box">
+      <div class="inv-modal-head"><h3>Nueva suscripción</h3><button onclick="_cerrarModalInv('modal-nueva-sub')">✕</button></div>
+
+      <div class="r2">
+        <div><label>Suscriptor *</label><input type="text" id="sub-cli" placeholder="Nombre completo"></div>
+        <div><label>Celular *</label><input type="tel" id="sub-cel" placeholder="310 000 0000"></div>
+      </div>
+
+      <div>
+        <label>Plan *</label>
+        <select id="sub-plan" class="iy" onchange="calcFechasSub()">
+          <option value="">— Selecciona un plan —</option>
+          <option value="Plan Margaritas|50000|15">🌼 Plan Margaritas — $50.000/mes (cada 15 días)</option>
+          <option value="Plan Claveles|100000|10">🌷 Plan Claveles — $100.000/mes (cada 10 días)</option>
+          <option value="Plan Girasoles|150000|7">🌻 Plan Girasoles — $150.000/mes (semanal)</option>
+        </select>
+      </div>
+
+      <div class="r2">
+        <div><label>Fecha inicio *</label><input type="date" id="sub-inicio" onchange="calcFechasSub()"></div>
+        <div><label>Hora de entrega</label><input type="time" id="sub-hora" value="09:00"></div>
+      </div>
+
+      <div><label>Dirección de entrega *</label><input type="text" id="sub-dir" placeholder="Barrio, calle, referencia..."></div>
+
+      <!-- Preview de fechas calculadas -->
+      <div id="sub-fechas-preview" style="display:none;background:#e8f5e2;border:1.5px solid #2d5a1b30;border-radius:10px;padding:12px;margin-top:10px;">
+        <div style="font-size:.65rem;font-weight:700;color:#2d5a1b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📅 Entregas programadas:</div>
+        <div id="sub-fechas-lista" style="font-size:.78rem;color:#1a3a0e;line-height:1.9;"></div>
+      </div>
+
+      <button class="btn bs" style="margin-top:14px;" onclick="guardarSuscripcion()">🌻 Registrar Suscripción</button>
     </div>
-
-    <div>
-      <label>Plan *</label>
-      <select id="sub-plan" class="iy" onchange="calcFechasSub()">
-        <option value="">— Selecciona un plan —</option>
-        <option value="Plan Margaritas|50000|15">🌼 Plan Margaritas — $50.000/mes (cada 15 días)</option>
-        <option value="Plan Claveles|100000|10">🌷 Plan Claveles — $100.000/mes (cada 10 días)</option>
-        <option value="Plan Girasoles|150000|7">🌻 Plan Girasoles — $150.000/mes (semanal)</option>
-      </select>
-    </div>
-
-    <div class="r2">
-      <div><label>Fecha inicio *</label><input type="date" id="sub-inicio" onchange="calcFechasSub()"></div>
-      <div><label>Hora de entrega</label><input type="time" id="sub-hora" value="09:00"></div>
-    </div>
-
-    <div><label>Dirección de entrega *</label><input type="text" id="sub-dir" placeholder="Barrio, calle, referencia..."></div>
-
-    <!-- Preview de fechas calculadas -->
-    <div id="sub-fechas-preview" style="display:none;background:#e8f5e2;border:1.5px solid #2d5a1b30;border-radius:10px;padding:12px;margin-top:10px;">
-      <div style="font-size:.65rem;font-weight:700;color:#2d5a1b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📅 Entregas programadas:</div>
-      <div id="sub-fechas-lista" style="font-size:.78rem;color:#1a3a0e;line-height:1.9;"></div>
-    </div>
-
-    <button class="btn bs" style="margin-top:14px;" onclick="guardarSuscripcion()">🌻 Registrar Suscripción</button>
   </div>
 
   <!-- LISTA SUSCRIPCIONES ACTIVAS -->
@@ -1863,6 +1910,7 @@ function addProd(){
   document.getElementById('a-cli').value='';
   notif('✅ '+nom+' agregado al catálogo');
   renderAdmin();
+  _cerrarModalInv('modal-agregar-producto');
 }
 
 function togProd(n){
@@ -3202,6 +3250,7 @@ function guardarOrdenCompra(){
   itemsOrdenTmp = [];
   actualizarListaInsumos();
   renderInventario();
+  _cerrarModalInv('modal-orden-compra');
   notif('✅ Orden #'+numeroOrden+' a '+proveedorNombre+' guardada — $'+Math.round(totalCosto).toLocaleString('es-CO')+' registrados en Caja');
 
   document.getElementById('inv-proveedor').value='';
@@ -3454,6 +3503,24 @@ function eliminarCaja(id){
   delete inventarioCajas[id];
   renderInventario();
   notif('🗑️ Registro eliminado');
+}
+
+// Abrir/cerrar los diálogos de Inventario (Registrar orden, Descontar, Stock, etc.)
+function _abrirModalInv(id){
+  const modal = document.getElementById(id);
+  if(!modal) return;
+  modal.classList.add('on');
+  // Refrescar el contenido según qué modal se abre, para que se vea al día
+  if(id==='modal-stock') renderStockActual();
+  if(id==='modal-seguimiento') renderSeguimientoInv();
+  if(id==='modal-prov-compras') renderProveedores();
+  if(id==='modal-comparar') poblarSelectComparar();
+  if(id==='modal-historial'){ /* ya se mantiene actualizado por renderInventario */ }
+  if(id==='modal-orden-compra'){ poblarSelectProveedor(); poblarSelectInsumo(); }
+}
+function _cerrarModalInv(id){
+  const modal = document.getElementById(id);
+  if(modal) modal.classList.remove('on');
 }
 
 function renderInventario(){
@@ -3726,6 +3793,7 @@ function confirmarDescuento(){
   renderStockActual();
   renderSeguimientoInv();
   notif('✅ Materiales descontados del inventario');
+  _cerrarModalInv('modal-descontar');
 }
 
 function fbCargarConsumos(){
@@ -4066,6 +4134,7 @@ function guardarSuscripcion(){
 
   notif('✅ Suscripción de '+cli+' registrada · '+entregas.length+' entregas al semáforo');
   renderSuscripciones();
+  _cerrarModalInv('modal-nueva-sub');
 
   // WhatsApp al suscriptor
   if(cel){
@@ -4563,7 +4632,7 @@ window.addEventListener('load', () => {
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v35' : '🔥 Firebase (local) v35';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v37' : '🔥 Firebase (local) v37';
   }
 });
 </script>
