@@ -852,6 +852,27 @@ textarea{resize:vertical;min-height:62px}
   </div>
 
   <div class="card">
+    <p class="ch">Insumos</p>
+    <p class="cs">Regístralos una vez — así eliges siempre el mismo nombre y no se te pierde el control de un producto por escribirlo distinto cada vez. Define cómo viene cada uno: rosas por unidad, solidago/rusco/gypsophila por paquete, etc.</p>
+    <div class="r2">
+      <div><label>Nombre del insumo *</label><input type="text" id="insumo-nombre-nuevo" placeholder="Ej: Rosa roja, Solidago, Rusco"></div>
+      <div>
+        <label>¿Cómo se vende/cuenta? *</label>
+        <select id="insumo-unidad-nueva">
+          <option value="unidad">Unidad</option>
+          <option value="paquete">Paquete</option>
+          <option value="atado">Atado</option>
+          <option value="docena">Docena</option>
+          <option value="metro">Metro</option>
+          <option value="manojo">Manojo</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="agregarInsumoRegistro()" style="width:100%;margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar insumo</button>
+    <div id="insumos-registro-lista" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
     <p class="ch">Registrar orden de compra</p>
     <p class="cs">Un proveedor, una fecha, y agrega todos los insumos que compraste en ese viaje. Al final se guarda como una sola orden — y se registra el gasto en Caja automáticamente.</p>
 
@@ -863,16 +884,16 @@ textarea{resize:vertical;min-height:62px}
 
     <span class="sl">Agregar insumo a esta orden</span>
     <div class="r2">
-      <div><label>Insumo / Producto *</label><input type="text" id="inv-nombre" placeholder="Ej: Rosa roja, Rusco, Papel coreano" list="lista-insumos" oninput="checkPrecioSync()"></div>
-      <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" placeholder="unidad, docena, metro..." value="unidad"></div>
+      <div><label>Insumo / Producto *</label><select id="inv-nombre" onchange="checkPrecioSync();_autocompletarUnidadInsumo()"><option value="">— Selecciona —</option></select></div>
+      <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" value="unidad" readonly style="background:#f3f3f1"></div>
     </div>
     <div class="r3">
-      <div><label>Costo por caja ($) *</label><input type="number" id="inv-costo" placeholder="0" min="0" oninput="calcInvPreview()"></div>
-      <div><label>Unidades por caja *</label><input type="number" id="inv-unidades" placeholder="0" min="1" oninput="calcInvPreview()"></div>
-      <div><label>¿Cuántas cajas? *</label><input type="number" id="inv-cantcajas" placeholder="1" min="1" value="1" oninput="calcInvPreview()"></div>
+      <div><label>Costo por caja / paquete / docena ($) *</label><input type="text" inputmode="numeric" id="inv-costo" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
+      <div><label>Unidades por caja / paquete / docena *</label><input type="number" id="inv-unidades" placeholder="0" min="1" oninput="calcInvPreview()"></div>
+      <div><label>¿Cuántas cajas / paquetes / docenas? *</label><input type="number" id="inv-cantcajas" placeholder="1" min="1" value="1" oninput="calcInvPreview()"></div>
     </div>
     <div class="r2">
-      <div><label>Precio de venta por unidad ($)</label><input type="number" id="inv-pventa" placeholder="0" min="0" oninput="calcInvPreview()"></div>
+      <div><label>Precio de venta por unidad ($)</label><input type="text" inputmode="numeric" id="inv-pventa" placeholder="0" oninput="_formatMoneyInput(this);calcInvPreview()"></div>
     </div>
     <div id="inv-precio-sync" style="display:none;font-size:.74rem;color:var(--cafe2);background:var(--crema2);border-radius:10px;padding:8px 12px;margin-top:8px;"></div>
     <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
@@ -903,6 +924,15 @@ textarea{resize:vertical;min-height:62px}
     <p class="ch">Compras por proveedor</p>
     <p class="cs">Toca el nombre de un proveedor para ver todas sus órdenes y el estado de pago de cada una.</p>
     <div id="proveedores-lista"></div>
+  </div>
+
+  <div class="card">
+    <p class="ch">Comparar precios entre proveedores</p>
+    <p class="cs">Elige un insumo y compara qué te cobró cada proveedor la última vez — para saber quién te conviene más.</p>
+    <select id="comp-insumo" onchange="renderCompararPrecios()">
+      <option value="">— Selecciona un insumo —</option>
+    </select>
+    <div id="comp-resultado" style="margin-top:12px"></div>
   </div>
 
   <div class="card">
@@ -2264,6 +2294,7 @@ function initAuth(){
       try{ fbCargarConsumos(); }catch(e){ console.error('listen consumos', e); }
       try{ fbCargarOrdenesCompra(); }catch(e){ console.error('listen ordenes', e); }
       try{ fbCargarProveedoresInv(); }catch(e){ console.error('listen proveedores', e); }
+      try{ fbCargarInsumosInv(); }catch(e){ console.error('listen insumos', e); }
       if(typeof renderCatalogo==='function' && document.getElementById('catalogo').classList.contains('on')) renderCatalogo();
       if(typeof renderFlores==='function' && document.getElementById('flores').classList.contains('on')) renderFlores();
       if(paginaPendiente){ ir(paginaPendiente.id, paginaPendiente.btn); paginaPendiente=null; }
@@ -2277,6 +2308,7 @@ function initAuth(){
       try{ db.ref('inventario/consumos').off(); }catch(e){}
       try{ db.ref('inventario/ordenes').off(); }catch(e){}
       try{ db.ref('inventario/proveedores').off(); }catch(e){}
+      try{ db.ref('inventario/insumos').off(); }catch(e){}
     }
   });
 }
@@ -2904,11 +2936,23 @@ function fbCargarPrecios() {
 // ── INVENTARIO: COMPRAS POR CAJA ────────────────
 let inventarioCajas = {}; // { id: {nombre,proveedor,fecha,costoCaja,unidades,costoUnitario,pventa,unidadVenta,utilidadUnitaria,margen,creado} }
 
+// ── FORMATO DE PLATA (puntos de miles automáticos) ──────
+function _formatMoneyInput(el){
+  const digits = el.value.replace(/\D/g,'');
+  el.value = digits ? Number(digits).toLocaleString('es-CO') : '';
+}
+function _parseMoneyInput(id){
+  const el = document.getElementById(id);
+  if(!el) return 0;
+  const digits = (el.value||'').replace(/\D/g,'');
+  return digits ? parseInt(digits,10) : 0;
+}
+
 function calcInvPreview(){
-  const costo = parseFloat(document.getElementById('inv-costo').value)||0;
+  const costo = _parseMoneyInput('inv-costo');
   const uds   = parseFloat(document.getElementById('inv-unidades').value)||0;
   const cant  = parseFloat(document.getElementById('inv-cantcajas').value)||1;
-  const pv    = parseFloat(document.getElementById('inv-pventa').value)||0;
+  const pv    = _parseMoneyInput('inv-pventa');
   const box   = document.getElementById('inv-preview');
   if(!costo || !uds){ box.style.display='none'; return; }
   const costoU = costo/uds;
@@ -2978,6 +3022,52 @@ function poblarSelectProveedor(){
   if(valorActual) sel.value = valorActual;
 }
 
+// ── COMPARAR PRECIOS ENTRE PROVEEDORES ──────────
+function poblarSelectComparar(){
+  const sel = document.getElementById('comp-insumo');
+  if(!sel) return;
+  const valorActual = sel.value;
+  const nombres = [...new Set(Object.values(inventarioCajas).map(c=>c.nombre).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">— Selecciona un insumo —</option>' +
+    nombres.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(valorActual) sel.value = valorActual;
+}
+
+function renderCompararPrecios(){
+  const insumo = document.getElementById('comp-insumo').value;
+  const wrap = document.getElementById('comp-resultado');
+  if(!wrap) return;
+  if(!insumo){ wrap.innerHTML = ''; return; }
+
+  // Para cada proveedor, tomamos su compra MÁS RECIENTE de este insumo (los precios cambian con el tiempo)
+  const porProveedor = {};
+  Object.values(inventarioCajas)
+    .filter(c=>(c.nombre||'').trim().toLowerCase()===insumo.trim().toLowerCase())
+    .forEach(c=>{
+      const key = c.proveedorId || c.proveedor || '—';
+      const fechaC = c.fecha || (c.creado||'').slice(0,10);
+      if(!porProveedor[key] || fechaC > (porProveedor[key].fecha||'')){
+        porProveedor[key] = { proveedor: c.proveedor||'—', costoUnitario: c.costoUnitario, fecha: fechaC };
+      }
+    });
+
+  const lista = Object.values(porProveedor).sort((a,b)=>a.costoUnitario-b.costoUnitario);
+  if(!lista.length){ wrap.innerHTML = '<p class="cs" style="text-align:center;padding:10px 0">Aún no hay compras registradas de este insumo.</p>'; return; }
+
+  const mejor = lista[0].costoUnitario;
+  wrap.innerHTML = lista.map((p,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gris2);">
+      <div>
+        <div style="font-size:.85rem;font-weight:700;">${i===0?'🏆 ':''}${p.proveedor}</div>
+        <div style="font-size:.68rem;color:var(--gris);">Última compra: ${p.fecha ? new Date(p.fecha+'T00:00:00').toLocaleDateString('es-CO') : '—'}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:${p.costoUnitario===mejor?'var(--verde)':'var(--cafe)'};">$${Math.round(p.costoUnitario).toLocaleString('es-CO')}</div>
+        ${p.costoUnitario>mejor?`<div style="font-size:.68rem;color:var(--rojo);">+$${Math.round(p.costoUnitario-mejor).toLocaleString('es-CO')}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
 function fbCargarProveedoresInv(){
   db.ref('inventario/proveedores').off();
   db.ref('inventario/proveedores').on('value', snap=>{
@@ -2995,10 +3085,10 @@ let itemsOrdenTmp = [];
 function agregarInsumoOrden(){
   if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
   const nombre = document.getElementById('inv-nombre').value.trim();
-  const costo = parseFloat(document.getElementById('inv-costo').value)||0;
+  const costo = _parseMoneyInput('inv-costo');
   const uds   = parseFloat(document.getElementById('inv-unidades').value)||0;
   const cantCajas = parseFloat(document.getElementById('inv-cantcajas').value)||1;
-  const pv    = parseFloat(document.getElementById('inv-pventa').value)||0;
+  const pv    = _parseMoneyInput('inv-pventa');
   const unidadVenta = document.getElementById('inv-unidadventa').value.trim() || 'unidad';
   const syncCosto = document.getElementById('inv-sync-costo').checked;
 
@@ -3156,11 +3246,21 @@ function renderProveedores(){
     const nombre = lista[0].proveedorNombre;
     const proveedorId = lista[0].proveedorId;
     const total = lista.reduce((s,o)=>s+o.totalCosto,0);
-    const pendiente = lista.filter(o=>o.estadoPago!=='Pagado').reduce((s,o)=>s+o.totalCosto,0);
+    const sinPagar = lista.filter(o=>o.estadoPago!=='Pagado');
+    const pendiente = sinPagar.reduce((s,o)=>s+o.totalCosto,0);
+    // Semáforo: el peor caso (la factura sin pagar más vieja) de este proveedor
+    let peorSem = null;
+    sinPagar.forEach(o=>{
+      const s = _semaforoFactura(o);
+      if(!peorSem || s.dias>peorSem.dias) peorSem = s;
+    });
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gris2);cursor:pointer;" onclick="_abrirVistaProveedor('${proveedorId}')">
-      <div>
-        <div style="font-weight:700;font-size:.88rem;">${nombre}</div>
-        ${pendiente>0?`<div style="font-size:.7rem;color:var(--rojo);">$${Math.round(pendiente).toLocaleString('es-CO')} sin pagar</div>`:`<div style="font-size:.7rem;color:var(--verde);">Todo pagado</div>`}
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${peorSem?`<span style="width:9px;height:9px;border-radius:50%;background:${peorSem.texto};display:inline-block;flex-shrink:0;"></span>`:''}
+        <div>
+          <div style="font-weight:700;font-size:.88rem;">${nombre}</div>
+          ${pendiente>0?`<div style="font-size:.7rem;color:var(--rojo);">$${Math.round(pendiente).toLocaleString('es-CO')} sin pagar</div>`:`<div style="font-size:.7rem;color:var(--verde);">Todo pagado</div>`}
+        </div>
       </div>
       <div style="font-weight:700;color:var(--sol2);">$${Math.round(total).toLocaleString('es-CO')}</div>
     </div>`;
@@ -3168,6 +3268,16 @@ function renderProveedores(){
 }
 
 // Vista dedicada de un proveedor: todas sus órdenes, con estado de pago editable
+// Semáforo por antigüedad — solo aplica a facturas sin pagar (las pagadas no urgen)
+function _semaforoFactura(orden){
+  if(orden.estadoPago==='Pagado') return {color:'#e0f0e5', texto:'var(--verde)', borde:'#e0f0e5', dias:0};
+  const fechaRef = orden.fecha || (orden.creado||'').slice(0,10) || hoy();
+  const dias = Math.floor((new Date() - new Date(fechaRef+'T00:00:00')) / 86400000);
+  if(dias <= 7)  return {color:'#e8f7ee', texto:'#1e8e4d', borde:'#bfe8cf', dias};
+  if(dias <= 15) return {color:'#fff6dd', texto:'#a67c00', borde:'#f0dfa0', dias};
+  return {color:'#fdecea', texto:'var(--rojo)', borde:'#f5c2ba', dias};
+}
+
 function _abrirVistaProveedor(proveedorId){
   const ordenes = Object.values(ordenesCompra).filter(o=>o.proveedorId===proveedorId).sort((a,b)=>a.numeroOrden-b.numeroOrden);
   if(!ordenes.length) return;
@@ -3196,11 +3306,16 @@ function _abrirVistaProveedor(proveedorId){
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:${pendiente>0?'var(--rojo)':'var(--verde)'};">$${Math.round(pendiente).toLocaleString('es-CO')}</div>
         </div>
       </div>
-      ${ordenes.map(o=>`
-        <div style="border:1.5px solid ${o.estadoPago==='Pagado'?'#e0f0e5':'#f0ded9'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+      ${ordenes.map(o=>{
+        const sem = _semaforoFactura(o);
+        return `
+        <div style="border:1.5px solid ${sem.borde};border-radius:12px;padding:12px 14px;margin-bottom:10px;background:${o.estadoPago==='Pagado'?'#fff':sem.color};">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-weight:700;font-size:.85rem;">Orden #${o.numeroOrden}</div>
-            <span style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;background:${o.estadoPago==='Pagado'?'#e0f0e5':'#fdecea'};color:${o.estadoPago==='Pagado'?'var(--verde)':'var(--rojo)'};">${o.estadoPago}</span>
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="width:9px;height:9px;border-radius:50%;background:${sem.texto};display:inline-block;"></span>
+              <div style="font-weight:700;font-size:.85rem;">Orden #${o.numeroOrden}</div>
+            </div>
+            <span style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;background:${o.estadoPago==='Pagado'?'#e0f0e5':sem.color};color:${o.estadoPago==='Pagado'?'var(--verde)':sem.texto};">${o.estadoPago==='Pagado'?'Pagado':sem.dias+' días sin pagar'}</span>
           </div>
           <div style="font-size:.72rem;color:var(--gris);margin-top:2px;">${o.fecha?new Date(o.fecha+'T00:00:00').toLocaleDateString('es-CO'):''}${o.referencia?' · '+o.referencia:''}</div>
           <div style="margin-top:8px;">
@@ -3212,7 +3327,8 @@ function _abrirVistaProveedor(proveedorId){
               ${o.estadoPago==='Pagado' ? '↩️ Marcar sin pagar' : '✅ Marcar como pagado'}
             </button>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
   document.body.appendChild(modal);
 }
@@ -3233,7 +3349,9 @@ function usarPrecioSync(tipo){
   const nombre = document.getElementById('inv-nombre').value.trim();
   const p = precios[nombre];
   if(!p) return;
-  document.getElementById('inv-pventa').value = tipo==='cliente' ? (p.cliente||0) : (p.interno||0);
+  const pv = document.getElementById('inv-pventa');
+  pv.value = tipo==='cliente' ? (p.cliente||0) : (p.interno||0);
+  _formatMoneyInput(pv);
   calcInvPreview();
 }
 
@@ -3258,6 +3376,9 @@ function renderInventario(){
   renderProveedores();
   renderProveedoresRegistro();
   poblarSelectProveedor();
+  poblarSelectComparar();
+  poblarSelectInsumo();
+  renderInsumosRegistro();
   const items = Object.values(inventarioCajas).sort((a,b)=> new Date(b.fecha||b.creado) - new Date(a.fecha||a.creado));
 
   if(resumen){
@@ -3307,10 +3428,83 @@ function fbCargarInventario(){
 let inventarioConsumos = {}; // { id: {id,nota,fecha,items:[{insumo,cantidad}],creado} }
 let _descRows = [{insumo:'',cantidad:''}];
 
+// ── INSUMOS (entidad registrada, con su unidad de venta fija) ──
+let insumosInv = {}; // { id: {id,nombre,unidadVenta,creado} }
+
+function agregarInsumoRegistro(){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const nombre = document.getElementById('insumo-nombre-nuevo').value.trim();
+  const unidadVenta = document.getElementById('insumo-unidad-nueva').value;
+  if(!nombre){ notif('⚠️ Escribe el nombre del insumo','err'); return; }
+  const yaExiste = Object.values(insumosInv).some(i=>(i.nombre||'').trim().toLowerCase()===nombre.toLowerCase());
+  if(yaExiste){ notif('⚠️ Ese insumo ya está registrado','err'); return; }
+
+  const id = 'insumo_'+Date.now();
+  const registro = { id, nombre, unidadVenta, creado:new Date().toISOString() };
+  try{ db.ref('inventario/insumos/'+id).set(registro); }catch(e){ console.warn('fb insumo', e); }
+  insumosInv[id] = registro;
+  poblarSelectInsumo();
+  renderInsumosRegistro();
+  actualizarListaInsumos();
+  document.getElementById('insumo-nombre-nuevo').value='';
+  notif('✅ '+nombre+' registrado ('+unidadVenta+')');
+}
+
+function eliminarInsumoRegistro(id){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  if(!confirm('¿Eliminar este insumo del registro? (no borra compras ya hechas)')) return;
+  try{ db.ref('inventario/insumos/'+id).remove(); }catch(e){ console.warn('fb insumo', e); }
+  delete insumosInv[id];
+  poblarSelectInsumo();
+  renderInsumosRegistro();
+  notif('🗑️ Insumo eliminado del registro');
+}
+
+function renderInsumosRegistro(){
+  const wrap = document.getElementById('insumos-registro-lista');
+  if(!wrap) return;
+  const lista = Object.values(insumosInv).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(!lista.length){ wrap.innerHTML = '<p class="cs" style="text-align:center;padding:10px 0">Aún no registras insumos.</p>'; return; }
+  wrap.innerHTML = lista.map(i=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gris2);">
+      <div style="font-size:.82rem;">${i.nombre} <span style="color:var(--gris);">· ${i.unidadVenta}</span></div>
+      <button onclick="eliminarInsumoRegistro('${i.id}')" style="background:none;border:none;color:var(--rojo);font-size:1rem;cursor:pointer;">🗑️</button>
+    </div>`).join('');
+}
+
+function poblarSelectInsumo(){
+  const sel = document.getElementById('inv-nombre');
+  if(!sel) return;
+  const valorActual = sel.value;
+  const lista = Object.values(insumosInv).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  sel.innerHTML = '<option value="">— Selecciona —</option>' +
+    lista.map(i=>`<option value="${i.nombre}">${i.nombre} (${i.unidadVenta})</option>`).join('');
+  if(valorActual) sel.value = valorActual;
+  _autocompletarUnidadInsumo();
+}
+
+function _autocompletarUnidadInsumo(){
+  const nombre = document.getElementById('inv-nombre').value;
+  const uInput = document.getElementById('inv-unidadventa');
+  if(!uInput) return;
+  const insumo = Object.values(insumosInv).find(i=>i.nombre===nombre);
+  uInput.value = insumo ? insumo.unidadVenta : 'unidad';
+}
+
+function fbCargarInsumosInv(){
+  db.ref('inventario/insumos').off();
+  db.ref('inventario/insumos').on('value', snap=>{
+    const data = snap.val();
+    insumosInv = data || {};
+    poblarSelectInsumo();
+    if (document.getElementById('inventario') && document.getElementById('inventario').classList.contains('on')) renderInsumosRegistro();
+  });
+}
+
 function actualizarListaInsumos(){
   const dl = document.getElementById('lista-insumos');
   if(!dl) return;
-  const nombres = [...new Set(Object.values(inventarioCajas).map(c=>c.nombre).filter(Boolean))];
+  const nombres = Object.values(insumosInv).map(i=>i.nombre).filter(Boolean);
   dl.innerHTML = nombres.map(n=>`<option value="${n}">`).join('');
 }
 
@@ -4241,7 +4435,7 @@ window.addEventListener('load', () => {
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v30' : '🔥 Firebase (local) v30';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v32' : '🔥 Firebase (local) v32';
   }
 });
 </script>
