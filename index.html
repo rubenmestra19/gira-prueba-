@@ -841,21 +841,38 @@ textarea{resize:vertical;min-height:62px}
   <div class="lkb"><span class="lki">📦</span><div><div class="lkh">Inventario — Compras por Caja</div><div class="lks">Compras por caja, vendes por unidad. Aquí calculamos costo unitario y utilidad automáticamente.</div></div></div>
 
   <div class="card">
-    <p class="ch">Registrar compra</p>
-    <p class="cs">Llena los datos de la caja que compraste. El costo unitario y la utilidad se calculan solos.</p>
+    <p class="ch">Proveedores</p>
+    <p class="cs">Regístralos una vez — así evitas errores de nombre y el consecutivo de órdenes sale siempre correcto.</p>
+    <div class="r2">
+      <div><label>Nombre del proveedor *</label><input type="text" id="prov-nombre-nuevo" placeholder="Ej: Sandra"></div>
+      <div><label>Teléfono (opcional)</label><input type="tel" id="prov-tel-nuevo" placeholder="310 000 0000"></div>
+    </div>
+    <button onclick="agregarProveedor()" style="width:100%;margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar proveedor</button>
+    <div id="proveedores-registro-lista" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <p class="ch">Registrar orden de compra</p>
+    <p class="cs">Un proveedor, una fecha, y agrega todos los insumos que compraste en ese viaje. Al final se guarda como una sola orden — y se registra el gasto en Caja automáticamente.</p>
 
     <div class="r2">
-      <div><label>Insumo / Producto *</label><input type="text" id="inv-nombre" placeholder="Ej: Rosa roja, Rusco, Papel coreano" oninput="checkPrecioSync()"></div>
-      <div><label>Proveedor</label><input type="text" id="inv-proveedor" placeholder="Opcional"></div>
+      <div><label>Proveedor *</label><select id="inv-proveedor"><option value="">— Selecciona —</option></select></div>
+      <div><label>Fecha de compra</label><input type="date" id="inv-fecha"></div>
+    </div>
+    <div><label>Referencia / N° de factura (opcional)</label><input type="text" id="inv-referencia" placeholder="Ej: Factura 0234"></div>
+
+    <span class="sl">Agregar insumo a esta orden</span>
+    <div class="r2">
+      <div><label>Insumo / Producto *</label><input type="text" id="inv-nombre" placeholder="Ej: Rosa roja, Rusco, Papel coreano" list="lista-insumos" oninput="checkPrecioSync()"></div>
+      <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" placeholder="unidad, docena, metro..." value="unidad"></div>
     </div>
     <div class="r3">
-      <div><label>Costo de la caja ($) *</label><input type="number" id="inv-costo" placeholder="0" min="0" oninput="calcInvPreview()"></div>
+      <div><label>Costo por caja ($) *</label><input type="number" id="inv-costo" placeholder="0" min="0" oninput="calcInvPreview()"></div>
       <div><label>Unidades por caja *</label><input type="number" id="inv-unidades" placeholder="0" min="1" oninput="calcInvPreview()"></div>
-      <div><label>Fecha de compra</label><input type="date" id="inv-fecha"></div>
+      <div><label>¿Cuántas cajas? *</label><input type="number" id="inv-cantcajas" placeholder="1" min="1" value="1" oninput="calcInvPreview()"></div>
     </div>
     <div class="r2">
       <div><label>Precio de venta por unidad ($)</label><input type="number" id="inv-pventa" placeholder="0" min="0" oninput="calcInvPreview()"></div>
-      <div><label>Unidad de venta</label><input type="text" id="inv-unidadventa" placeholder="unidad, docena, metro..." value="unidad"></div>
     </div>
     <div id="inv-precio-sync" style="display:none;font-size:.74rem;color:var(--cafe2);background:var(--crema2);border-radius:10px;padding:8px 12px;margin-top:8px;"></div>
     <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
@@ -865,17 +882,32 @@ textarea{resize:vertical;min-height:62px}
 
     <div class="pb" id="inv-preview" style="display:none">
       <div class="pl"><span>Costo unitario:</span><span id="inv-r-costou">$0</span></div>
+      <div class="pl"><span>Total de esta línea (todas las cajas):</span><span id="inv-r-totallinea">$0</span></div>
       <div class="pl"><span>Utilidad por unidad:</span><span id="inv-r-util">$0</span></div>
       <div class="pt"><span class="pt-l">Margen</span><span class="pt-v" id="inv-r-margen">0%</span></div>
     </div>
 
-    <button onclick="guardarCaja()" style="width:100%;margin-top:16px;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Registrar caja</button>
+    <button onclick="agregarInsumoOrden()" style="width:100%;margin-top:10px;background:var(--crema2);color:var(--cafe);border:1.5px solid var(--gris2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Agregar insumo a la orden</button>
+
+    <div id="orden-lista" style="margin-top:10px"></div>
+    <div class="pb" id="orden-total-box" style="display:none">
+      <div class="pt"><span class="pt-l">Total de la orden</span><span class="pt-v" id="orden-total">$0</span></div>
+    </div>
+
+    <button onclick="guardarOrdenCompra()" style="width:100%;margin-top:16px;background:#1a0900;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar orden de compra</button>
   </div>
 
   <datalist id="lista-insumos"></datalist>
 
   <div class="card">
+    <p class="ch">Compras por proveedor</p>
+    <p class="cs">Toca el nombre de un proveedor para ver todas sus órdenes y el estado de pago de cada una.</p>
+    <div id="proveedores-lista"></div>
+  </div>
+
+  <div class="card">
     <p class="ch">Descontar materiales — Armado de trabajo</p>
+
     <p class="cs">Registra lo que realmente usaste en este arreglo (varía por color y gusto del cliente). Se descuenta del inventario al instante, en todos los dispositivos.</p>
 
     <div class="r2">
@@ -999,6 +1031,7 @@ textarea{resize:vertical;min-height:62px}
       <span class="fin-pil" onclick="finPeriodo('mes',this)">Este mes</span>
       <span class="fin-pil" onclick="finPeriodo('todo',this)">Todo</span>
     </div>
+    <button onclick="exportarFinanzasExcel()" style="width:100%;margin:10px 0 4px;background:#1a0900;color:#fff;border:none;border-radius:11px;padding:11px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;">📥 Exportar este período a Excel</button>
     <div id="fin-contenido"></div>
   </div>
 </div>
@@ -2227,6 +2260,10 @@ function initAuth(){
       try{ fbEscucharPedidos(); }catch(e){ console.error('listen pedidos', e); }
       try{ fbEscucharCaja(); }catch(e){ console.error('listen caja', e); }
       try{ fbEscucharSuscripciones(); }catch(e){ console.error('listen suscripciones', e); }
+      try{ fbCargarInventario(); }catch(e){ console.error('listen inventario', e); }
+      try{ fbCargarConsumos(); }catch(e){ console.error('listen consumos', e); }
+      try{ fbCargarOrdenesCompra(); }catch(e){ console.error('listen ordenes', e); }
+      try{ fbCargarProveedoresInv(); }catch(e){ console.error('listen proveedores', e); }
       if(typeof renderCatalogo==='function' && document.getElementById('catalogo').classList.contains('on')) renderCatalogo();
       if(typeof renderFlores==='function' && document.getElementById('flores').classList.contains('on')) renderFlores();
       if(paginaPendiente){ ir(paginaPendiente.id, paginaPendiente.btn); paginaPendiente=null; }
@@ -2236,6 +2273,10 @@ function initAuth(){
       try{ db.ref('pedidos').off(); }catch(e){}
       try{ db.ref('caja').off(); }catch(e){}
       try{ db.ref('suscripciones').off(); }catch(e){}
+      try{ db.ref('inventario/cajas').off(); }catch(e){}
+      try{ db.ref('inventario/consumos').off(); }catch(e){}
+      try{ db.ref('inventario/ordenes').off(); }catch(e){}
+      try{ db.ref('inventario/proveedores').off(); }catch(e){}
     }
   });
 }
@@ -2866,66 +2907,314 @@ let inventarioCajas = {}; // { id: {nombre,proveedor,fecha,costoCaja,unidades,co
 function calcInvPreview(){
   const costo = parseFloat(document.getElementById('inv-costo').value)||0;
   const uds   = parseFloat(document.getElementById('inv-unidades').value)||0;
+  const cant  = parseFloat(document.getElementById('inv-cantcajas').value)||1;
   const pv    = parseFloat(document.getElementById('inv-pventa').value)||0;
   const box   = document.getElementById('inv-preview');
   if(!costo || !uds){ box.style.display='none'; return; }
   const costoU = costo/uds;
+  const totalLinea = costo*cant;
   const util   = pv - costoU;
   const margen = pv>0 ? Math.round((util/pv)*100) : 0;
   document.getElementById('inv-r-costou').textContent = '$'+Math.round(costoU).toLocaleString('es-CO');
+  document.getElementById('inv-r-totallinea').textContent = '$'+Math.round(totalLinea).toLocaleString('es-CO');
   document.getElementById('inv-r-util').textContent   = '$'+Math.round(util).toLocaleString('es-CO');
   document.getElementById('inv-r-margen').textContent = margen+'%';
   box.style.display='block';
 }
 
-function guardarCaja(){
+// ── PROVEEDORES (entidad registrada, evita errores de tecleo) ──
+let proveedoresInv = {}; // { id: {id,nombre,telefono,creado} }
+
+function agregarProveedor(){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const nombre = document.getElementById('prov-nombre-nuevo').value.trim();
+  const telefono = document.getElementById('prov-tel-nuevo').value.trim();
+  if(!nombre){ notif('⚠️ Escribe el nombre del proveedor','err'); return; }
+  const yaExiste = Object.values(proveedoresInv).some(p=>(p.nombre||'').trim().toLowerCase()===nombre.toLowerCase());
+  if(yaExiste){ notif('⚠️ Ese proveedor ya está registrado','err'); return; }
+
+  const id = 'prov_'+Date.now();
+  const registro = { id, nombre, telefono, creado:new Date().toISOString() };
+  try{ db.ref('inventario/proveedores/'+id).set(registro); }catch(e){ console.warn('fb proveedor', e); }
+  proveedoresInv[id] = registro;
+  poblarSelectProveedor();
+  renderProveedoresRegistro();
+  document.getElementById('prov-nombre-nuevo').value='';
+  document.getElementById('prov-tel-nuevo').value='';
+  notif('✅ Proveedor '+nombre+' registrado');
+}
+
+function eliminarProveedor(id){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const tieneOrdenes = Object.values(ordenesCompra).some(o=>o.proveedorId===id);
+  if(tieneOrdenes){ notif('⚠️ Este proveedor ya tiene órdenes registradas, no se puede borrar','err'); return; }
+  if(!confirm('¿Eliminar este proveedor?')) return;
+  try{ db.ref('inventario/proveedores/'+id).remove(); }catch(e){ console.warn('fb proveedor', e); }
+  delete proveedoresInv[id];
+  poblarSelectProveedor();
+  renderProveedoresRegistro();
+  notif('🗑️ Proveedor eliminado');
+}
+
+function renderProveedoresRegistro(){
+  const wrap = document.getElementById('proveedores-registro-lista');
+  if(!wrap) return;
+  const lista = Object.values(proveedoresInv).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(!lista.length){ wrap.innerHTML = '<p class="cs" style="text-align:center;padding:10px 0">Aún no registras proveedores.</p>'; return; }
+  wrap.innerHTML = lista.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gris2);">
+      <div style="font-size:.82rem;">${p.nombre}${p.telefono?' · '+p.telefono:''}</div>
+      <button onclick="eliminarProveedor('${p.id}')" style="background:none;border:none;color:var(--rojo);font-size:1rem;cursor:pointer;">🗑️</button>
+    </div>`).join('');
+}
+
+function poblarSelectProveedor(){
+  const sel = document.getElementById('inv-proveedor');
+  if(!sel) return;
+  const valorActual = sel.value;
+  const lista = Object.values(proveedoresInv).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  sel.innerHTML = '<option value="">— Selecciona —</option>' +
+    lista.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  if(valorActual) sel.value = valorActual;
+}
+
+function fbCargarProveedoresInv(){
+  db.ref('inventario/proveedores').off();
+  db.ref('inventario/proveedores').on('value', snap=>{
+    const data = snap.val();
+    proveedoresInv = data || {};
+    poblarSelectProveedor();
+    if (document.getElementById('inventario') && document.getElementById('inventario').classList.contains('on')) renderProveedoresRegistro();
+  });
+}
+
+// ── ÓRDENES DE COMPRA ────────────────────────────
+let ordenesCompra = {}; // { id: {id,proveedorId,proveedorNombre,fecha,referencia,numeroOrden,items:[...],totalCosto,estadoPago,creado} }
+let itemsOrdenTmp = [];
+
+function agregarInsumoOrden(){
   if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
   const nombre = document.getElementById('inv-nombre').value.trim();
-  const proveedor = document.getElementById('inv-proveedor').value.trim();
   const costo = parseFloat(document.getElementById('inv-costo').value)||0;
   const uds   = parseFloat(document.getElementById('inv-unidades').value)||0;
-  const fecha = document.getElementById('inv-fecha').value || hoy();
+  const cantCajas = parseFloat(document.getElementById('inv-cantcajas').value)||1;
   const pv    = parseFloat(document.getElementById('inv-pventa').value)||0;
   const unidadVenta = document.getElementById('inv-unidadventa').value.trim() || 'unidad';
+  const syncCosto = document.getElementById('inv-sync-costo').checked;
 
   if(!nombre){ notif('⚠️ Escribe el nombre del insumo','err'); return; }
   if(!costo || !uds){ notif('⚠️ Costo de caja y unidades son obligatorios','err'); return; }
+  if(!cantCajas || cantCajas<1){ notif('⚠️ ¿Cuántas cajas compraste? (mínimo 1)','err'); return; }
 
-  const costoUnitario = costo/uds;
+  const costoUnitario = costo/uds; // no cambia con la cantidad de cajas — es el precio por unidad
+  const costoTotalLinea = costo*cantCajas;
+  const unidadesTotales = uds*cantCajas;
   const utilidadUnitaria = pv - costoUnitario;
   const margen = pv>0 ? Math.round((utilidadUnitaria/pv)*100) : 0;
-  const id = 'caja_'+Date.now();
 
-  const registro = {
-    id, nombre, proveedor, fecha, costoCaja: costo, unidades: uds,
-    costoUnitario, pventa: pv, unidadVenta, utilidadUnitaria, margen,
-    creado: new Date().toISOString()
-  };
-
-  try{ db.ref('inventario/cajas/'+id).set(registro); }catch(e){ console.warn('fb inventario', e); }
-  envGS(Object.assign({}, registro), 'compraInsumo');
-  inventarioCajas[id] = registro;
-
-  if(document.getElementById('inv-sync-costo').checked){
-    try{
-      const clienteActual = (precios[nombre] && precios[nombre].cliente) || 0;
-      fbGuardarPrecio(nombre, Math.round(costoUnitario), clienteActual);
-    }catch(e){ console.warn('sync precio', e); }
-  }
-
-  actualizarListaInsumos();
-  renderInventario();
-  notif('✅ Caja de '+nombre+' registrada');
+  itemsOrdenTmp.push({
+    nombre, costoCajaUnit:costo, unidadesPorCaja:uds, cantidadCajas:cantCajas,
+    costoTotalLinea, unidadesTotales, costoUnitario, pventa:pv, unidadVenta,
+    utilidadUnitaria, margen, syncCosto
+  });
 
   document.getElementById('inv-nombre').value='';
-  document.getElementById('inv-proveedor').value='';
   document.getElementById('inv-costo').value='';
   document.getElementById('inv-unidades').value='';
+  document.getElementById('inv-cantcajas').value='1';
   document.getElementById('inv-pventa').value='';
   document.getElementById('inv-unidadventa').value='unidad';
   document.getElementById('inv-sync-costo').checked=false;
   document.getElementById('inv-preview').style.display='none';
   document.getElementById('inv-precio-sync').style.display='none';
+  renderItemsOrden();
+  notif('✅ '+nombre+' agregado a la orden — ¿algo más?');
+}
+
+function quitarInsumoOrden(i){
+  itemsOrdenTmp.splice(i,1);
+  renderItemsOrden();
+}
+
+function renderItemsOrden(){
+  const wrap = document.getElementById('orden-lista');
+  const box = document.getElementById('orden-total-box');
+  if(!wrap) return;
+  if(!itemsOrdenTmp.length){ wrap.innerHTML=''; box.style.display='none'; return; }
+  wrap.innerHTML = itemsOrdenTmp.map((it,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gris2);">
+      <div>
+        <div style="font-size:.85rem;font-weight:700;">${it.nombre}${it.cantidadCajas>1?' × '+it.cantidadCajas+' cajas':''}</div>
+        <div style="font-size:.7rem;color:var(--gris);">${it.unidadesTotales} ${it.unidadVenta} en total · $${Math.round(it.costoUnitario).toLocaleString('es-CO')} c/u</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:700;">$${Math.round(it.costoTotalLinea).toLocaleString('es-CO')}</span>
+        <button onclick="quitarInsumoOrden(${i})" style="background:none;border:none;color:var(--rojo);font-size:1.05rem;cursor:pointer;">🗑️</button>
+      </div>
+    </div>`).join('');
+  const total = itemsOrdenTmp.reduce((s,it)=>s+it.costoTotalLinea,0);
+  document.getElementById('orden-total').textContent = '$'+Math.round(total).toLocaleString('es-CO');
+  box.style.display='block';
+}
+
+function guardarOrdenCompra(){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const proveedorId = document.getElementById('inv-proveedor').value;
+  const fecha = document.getElementById('inv-fecha').value || hoy();
+  const referencia = document.getElementById('inv-referencia').value.trim();
+
+  if(!proveedorId){ notif('⚠️ Selecciona el proveedor (o regístralo arriba si no existe)','err'); return; }
+  if(!itemsOrdenTmp.length){ notif('⚠️ Agrega al menos un insumo a la orden','err'); return; }
+
+  const proveedorNombre = (proveedoresInv[proveedorId] && proveedoresInv[proveedorId].nombre) || '—';
+  const ordenesDelProveedor = Object.values(ordenesCompra).filter(o=>o.proveedorId===proveedorId);
+  const numeroOrden = ordenesDelProveedor.length + 1;
+  const idOrden = 'orden_'+Date.now();
+  const totalCosto = itemsOrdenTmp.reduce((s,it)=>s+it.costoTotalLinea,0);
+
+  const orden = {
+    id:idOrden, proveedorId, proveedorNombre, fecha, referencia, numeroOrden,
+    items:itemsOrdenTmp.slice(), totalCosto, estadoPago:'Sin pagar', creado:new Date().toISOString()
+  };
+  try{ db.ref('inventario/ordenes/'+idOrden).set(orden); }catch(e){ console.warn('fb orden', e); }
+  ordenesCompra[idOrden] = orden;
+
+  // Cada insumo de la orden se guarda también como compra individual (con el TOTAL de todas sus cajas)
+  // para que Stock y Seguimiento sigan calculando igual que siempre, sin cambios.
+  itemsOrdenTmp.forEach(it=>{
+    const idCaja = 'caja_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    const registro = {
+      id:idCaja, nombre:it.nombre, proveedor:proveedorNombre, proveedorId, fecha,
+      costoCaja:it.costoTotalLinea, unidades:it.unidadesTotales,
+      cantidadCajas:it.cantidadCajas, costoCajaUnit:it.costoCajaUnit, unidadesPorCaja:it.unidadesPorCaja,
+      costoUnitario:it.costoUnitario, pventa:it.pventa, unidadVenta:it.unidadVenta,
+      utilidadUnitaria:it.utilidadUnitaria, margen:it.margen, ordenId:idOrden, creado:new Date().toISOString()
+    };
+    try{ db.ref('inventario/cajas/'+idCaja).set(registro); }catch(e){ console.warn('fb inventario', e); }
+    envGS(Object.assign({}, registro), 'compraInsumo');
+    inventarioCajas[idCaja] = registro;
+    if(it.syncCosto){
+      try{
+        const clienteActual = (precios[it.nombre] && precios[it.nombre].cliente) || 0;
+        fbGuardarPrecio(it.nombre, Math.round(it.costoUnitario), clienteActual);
+      }catch(e){ console.warn('sync precio', e); }
+    }
+  });
+
+  // Un solo gasto en Caja por el total de la orden — no hay que registrarlo dos veces
+  const movCaja = { id:Date.now(), tipo:'gasto', monto:totalCosto, cat:'Compra flores',
+    desc:'Orden #'+numeroOrden+' — '+proveedorNombre+(referencia?' ('+referencia+')':''), fecha:Date.now() };
+  cajaDatos.unshift(movCaja);
+  saveCaja();
+  try{ db.ref('caja/'+movCaja.id).set(movCaja); }catch(e){ console.warn('fb caja', e); }
+  envGS({ id:movCaja.id, clase:movCaja.tipo, monto:movCaja.monto, categoria:movCaja.cat, desc:movCaja.desc, fecha:new Date(movCaja.fecha).toISOString() }, 'caja');
+
+  itemsOrdenTmp = [];
+  actualizarListaInsumos();
+  renderInventario();
+  notif('✅ Orden #'+numeroOrden+' a '+proveedorNombre+' guardada — $'+Math.round(totalCosto).toLocaleString('es-CO')+' registrados en Caja');
+
+  document.getElementById('inv-proveedor').value='';
+  document.getElementById('inv-referencia').value='';
+}
+
+function fbCargarOrdenesCompra(){
+  db.ref('inventario/ordenes').off();
+  db.ref('inventario/ordenes').on('value', snap=>{
+    const data = snap.val();
+    ordenesCompra = data || {};
+    if (document.getElementById('inventario') && document.getElementById('inventario').classList.contains('on')) renderProveedores();
+  });
+}
+
+function togglePagoOrden(idOrden){
+  if(typeof esAdmin==='function' && !esAdmin()){ notif('🔒 Solo administración','err'); return; }
+  const orden = ordenesCompra[idOrden];
+  if(!orden) return;
+  const nuevoEstado = orden.estadoPago==='Pagado' ? 'Sin pagar' : 'Pagado';
+  try{ db.ref('inventario/ordenes/'+idOrden+'/estadoPago').set(nuevoEstado); }catch(e){ console.warn('fb estadoPago', e); }
+  orden.estadoPago = nuevoEstado;
+  notif(nuevoEstado==='Pagado' ? '✅ Marcada como pagada' : '↩️ Marcada como sin pagar');
+  if(document.getElementById('vista-proveedor-modal')) _abrirVistaProveedor(orden.proveedorId);
+  else renderProveedores();
+}
+
+function renderProveedores(){
+  const wrap = document.getElementById('proveedores-lista');
+  if(!wrap) return;
+  const ordenes = Object.values(ordenesCompra);
+  if(!ordenes.length){ wrap.innerHTML = '<p class="cs" style="text-align:center;padding:16px 0">Aún no registras órdenes de compra.</p>'; return; }
+
+  const porProveedor = {};
+  ordenes.forEach(o=>{
+    const key = o.proveedorId || o.proveedorNombre;
+    if(!key) return;
+    (porProveedor[key] = porProveedor[key] || []).push(o);
+  });
+
+  wrap.innerHTML = Object.values(porProveedor).map(lista=>{
+    const nombre = lista[0].proveedorNombre;
+    const proveedorId = lista[0].proveedorId;
+    const total = lista.reduce((s,o)=>s+o.totalCosto,0);
+    const pendiente = lista.filter(o=>o.estadoPago!=='Pagado').reduce((s,o)=>s+o.totalCosto,0);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gris2);cursor:pointer;" onclick="_abrirVistaProveedor('${proveedorId}')">
+      <div>
+        <div style="font-weight:700;font-size:.88rem;">${nombre}</div>
+        ${pendiente>0?`<div style="font-size:.7rem;color:var(--rojo);">$${Math.round(pendiente).toLocaleString('es-CO')} sin pagar</div>`:`<div style="font-size:.7rem;color:var(--verde);">Todo pagado</div>`}
+      </div>
+      <div style="font-weight:700;color:var(--sol2);">$${Math.round(total).toLocaleString('es-CO')}</div>
+    </div>`;
+  }).join('');
+}
+
+// Vista dedicada de un proveedor: todas sus órdenes, con estado de pago editable
+function _abrirVistaProveedor(proveedorId){
+  const ordenes = Object.values(ordenesCompra).filter(o=>o.proveedorId===proveedorId).sort((a,b)=>a.numeroOrden-b.numeroOrden);
+  if(!ordenes.length) return;
+  const nombre = ordenes[0].proveedorNombre;
+  const total = ordenes.reduce((s,o)=>s+o.totalCosto,0);
+  const pendiente = ordenes.filter(o=>o.estadoPago!=='Pagado').reduce((s,o)=>s+o.totalCosto,0);
+
+  let modal = document.getElementById('vista-proveedor-modal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'vista-proveedor-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(26,9,0,.72);z-index:960;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:18px;max-width:480px;width:100%;padding:22px;max-height:88vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;margin:0;">${nombre}</h3>
+        <button onclick="document.getElementById('vista-proveedor-modal').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--gris);">✕</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div style="flex:1;background:var(--crema2);border-radius:12px;padding:10px 14px;">
+          <div style="font-size:.65rem;color:var(--gris);text-transform:uppercase;">Total histórico</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;">$${Math.round(total).toLocaleString('es-CO')}</div>
+        </div>
+        <div style="flex:1;background:${pendiente>0?'#fdecea':'#e8f7ee'};border-radius:12px;padding:10px 14px;">
+          <div style="font-size:.65rem;color:var(--gris);text-transform:uppercase;">Sin pagar</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:${pendiente>0?'var(--rojo)':'var(--verde)'};">$${Math.round(pendiente).toLocaleString('es-CO')}</div>
+        </div>
+      </div>
+      ${ordenes.map(o=>`
+        <div style="border:1.5px solid ${o.estadoPago==='Pagado'?'#e0f0e5':'#f0ded9'};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:700;font-size:.85rem;">Orden #${o.numeroOrden}</div>
+            <span style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;background:${o.estadoPago==='Pagado'?'#e0f0e5':'#fdecea'};color:${o.estadoPago==='Pagado'?'var(--verde)':'var(--rojo)'};">${o.estadoPago}</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--gris);margin-top:2px;">${o.fecha?new Date(o.fecha+'T00:00:00').toLocaleDateString('es-CO'):''}${o.referencia?' · '+o.referencia:''}</div>
+          <div style="margin-top:8px;">
+            ${(o.items||[]).map(it=>`<div style="font-size:.74rem;color:var(--cafe2);padding:2px 0;">• ${it.nombre}${it.cantidadCajas>1?' × '+it.cantidadCajas:''} — $${Math.round(it.costoTotalLinea||it.costoCaja||0).toLocaleString('es-CO')}</div>`).join('')}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <span style="font-weight:700;">$${Math.round(o.totalCosto).toLocaleString('es-CO')}</span>
+            <button onclick="togglePagoOrden('${o.id}')" style="background:${o.estadoPago==='Pagado'?'var(--crema2)':'#1a0900'};color:${o.estadoPago==='Pagado'?'var(--cafe)':'#fff'};border:1.5px solid ${o.estadoPago==='Pagado'?'var(--gris2)':'#1a0900'};border-radius:9px;padding:6px 14px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+              ${o.estadoPago==='Pagado' ? '↩️ Marcar sin pagar' : '✅ Marcar como pagado'}
+            </button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  document.body.appendChild(modal);
 }
 
 // ── SINCRONÍA CON PESTAÑA DE PRECIOS ────────────
@@ -2965,6 +3254,10 @@ function renderInventario(){
   renderDescRows();
   renderStockActual();
   renderSeguimientoInv();
+  renderItemsOrden();
+  renderProveedores();
+  renderProveedoresRegistro();
+  poblarSelectProveedor();
   const items = Object.values(inventarioCajas).sort((a,b)=> new Date(b.fecha||b.creado) - new Date(a.fecha||a.creado));
 
   if(resumen){
@@ -3001,6 +3294,7 @@ function renderInventario(){
 }
 
 function fbCargarInventario(){
+  db.ref('inventario/cajas').off();
   db.ref('inventario/cajas').on('value', snap=>{
     const data = snap.val();
     inventarioCajas = data || {};
@@ -3113,6 +3407,7 @@ function confirmarDescuento(){
 }
 
 function fbCargarConsumos(){
+  db.ref('inventario/consumos').off();
   db.ref('inventario/consumos').on('value', snap=>{
     const data = snap.val();
     inventarioConsumos = data || {};
@@ -3195,6 +3490,7 @@ function fbGuardarPedido(pedido) {
 // ── ESCUCHAR PEDIDOS EN TIEMPO REAL ────────────
 function fbEscucharPedidos() {
   // Solo los ~300 pedidos más recientes: la carga queda acotada aunque el historial crezca por años.
+  db.ref('pedidos').off(); // evita listeners duplicados si onAuthStateChanged dispara de nuevo
   db.ref('pedidos').orderByKey().limitToLast(300).on('value', snap => {
     const data = snap.val();
     if (data) {
@@ -3213,6 +3509,7 @@ function fbEliminarPedido(id) {
 
 // ── ESCUCHAR CAJA EN TIEMPO REAL (fix: antes solo escribía a Firebase, nunca leía de vuelta) ──
 function fbEscucharCaja() {
+  db.ref('caja').off();
   db.ref('caja').on('value', snap => {
     const data = snap.val();
     cajaDatos = data ? Object.values(data).sort((a,b)=>b.fecha-a.fecha) : [];
@@ -3223,6 +3520,7 @@ function fbEscucharCaja() {
 
 // ── ESCUCHAR SUSCRIPCIONES EN TIEMPO REAL (mismo fix) ──
 function fbEscucharSuscripciones() {
+  db.ref('suscripciones').off();
   db.ref('suscripciones').on('value', snap => {
     const data = snap.val();
     suscripciones = data ? Object.values(data) : [];
@@ -3763,6 +4061,64 @@ function borrarMov(id){
 }
 
 // ── FINANZAS (Nivel 3 — clave KarolNicolas) ──
+// ── EXPORTAR FINANZAS A EXCEL (CSV) ─────────────
+function _csvEscape(v){
+  const s = String(v==null?'':v);
+  return /[",\n;]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+
+function exportarFinanzasExcel(){
+  const datos = getDatosPeriodo();
+  const ing = datos.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0);
+  const gas = datos.filter(m=>m.tipo==='gasto').reduce((s,m)=>s+m.monto,0);
+  const sal = ing - gas;
+  const nombrePeriodo = finPer==='hoy'?'Hoy':finPer==='semana'?'Esta semana':finPer==='mes'?'Este mes':'Todo el período';
+
+  const filas = [];
+  filas.push(['Girasoles Floristería — Reporte de Finanzas']);
+  filas.push(['Período', nombrePeriodo]);
+  filas.push(['Generado', new Date().toLocaleString('es-CO')]);
+  filas.push([]);
+  filas.push(['RESUMEN']);
+  filas.push(['Ingresos', ing]);
+  filas.push(['Gastos', gas]);
+  filas.push(['Saldo neto', sal]);
+  filas.push(['Tasa de ahorro', (ing?Math.round(sal/ing*100):0)+'%']);
+  filas.push([]);
+
+  const porCat = {};
+  datos.filter(m=>m.tipo==='gasto').forEach(m=>porCat[m.cat]=(porCat[m.cat]||0)+m.monto);
+  if(Object.keys(porCat).length){
+    filas.push(['GASTOS POR CATEGORÍA']);
+    Object.entries(porCat).sort((a,b)=>b[1]-a[1]).forEach(([n,v])=>filas.push([n, v]));
+    filas.push([]);
+  }
+
+  filas.push(['DETALLE DE MOVIMIENTOS']);
+  filas.push(['Fecha','Hora','Tipo','Categoría','Descripción','Monto']);
+  datos.slice().sort((a,b)=>a.fecha-b.fecha).forEach(m=>{
+    const f = new Date(m.fecha);
+    filas.push([
+      f.toLocaleDateString('es-CO'),
+      f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),
+      m.tipo==='ingreso'?'Ingreso':'Gasto',
+      m.cat, m.desc, m.monto
+    ]);
+  });
+
+  const csv = filas.map(fila=>fila.map(_csvEscape).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Finanzas_Girasoles_'+finPer+'_'+hoy()+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  notif('✅ Reporte descargado — ábrelo con Excel o Google Sheets');
+}
+
 function finTab(tab, btn){
   finTabAct = tab;
   document.querySelectorAll('.fin-tab').forEach(b=>b.classList.remove('on'));
@@ -3871,8 +4227,9 @@ window.addEventListener('load', () => {
   // 2) Firebase: cada llamada blindada, una falla no tumba a las demás.
   let fbOk = true;
   try{ fbCargarPrecios(); }catch(e){ fbOk=false; console.warn('fbCargarPrecios', e); }
-  try{ fbCargarInventario(); }catch(e){ fbOk=false; console.warn('fbCargarInventario', e); }
-  try{ fbCargarConsumos(); }catch(e){ fbOk=false; console.warn('fbCargarConsumos', e); }
+  // fbCargarInventario / fbCargarOrdenesCompra / fbCargarProveedoresInv ahora se cargan
+  // solo tras iniciar sesión (ver initAuth) — requieren auth != null según las reglas.
+  // fbCargarConsumos ahora se carga solo tras iniciar sesión (ver initAuth)
   try{ initAuth(); }catch(e){ fbOk=false; console.warn('initAuth', e); }
   try{ fbCargarCatalogo(); }catch(e){ fbOk=false; console.warn('fbCargarCatalogo', e); }
   try{ fbCargarFlores(); }catch(e){ fbOk=false; console.warn('fbCargarFlores', e); }
@@ -3884,7 +4241,7 @@ window.addEventListener('load', () => {
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v28' : '🔥 Firebase (local) v28';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v30' : '🔥 Firebase (local) v30';
   }
 });
 </script>
