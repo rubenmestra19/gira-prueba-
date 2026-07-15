@@ -51,7 +51,7 @@ body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:var(--cafe);min-h
 
 /* CARD */
 .card{background:#fff;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 2px 16px rgba(0,0,0,.07);border:1px solid #e0e0e0}
-.ch{font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--cafe);margin-bottom:3px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.ch{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--cafe);margin-bottom:3px;font-weight:700}
 .cs{font-size:.79rem;color:var(--gris);margin-bottom:16px}
 .sl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1a0900;background:var(--sol);padding:4px 11px;border-radius:20px;display:inline-block;margin:14px 0 9px}
 
@@ -3110,7 +3110,7 @@ function renderCompararPrecios(){
         <div style="font-size:.68rem;color:var(--gris);">Última compra: ${p.fecha ? new Date(p.fecha+'T00:00:00').toLocaleDateString('es-CO') : '—'}</div>
       </div>
       <div style="text-align:right;">
-        <div style="font-weight:700;color:${p.costoUnitario===mejor?'var(--verde)':'var(--cafe)'};">$${Math.round(p.costoUnitario).toLocaleString('es-CO')}</div>
+        <div style="font-size:1rem;font-weight:700;color:${p.costoUnitario===mejor?'var(--verde)':'var(--cafe)'};">$${Math.round(p.costoUnitario).toLocaleString('es-CO')}</div>
         ${p.costoUnitario>mejor?`<div style="font-size:.68rem;color:var(--rojo);">+$${Math.round(p.costoUnitario-mejor).toLocaleString('es-CO')}</div>`:''}
       </div>
     </div>`).join('');
@@ -4632,7 +4632,7 @@ window.addEventListener('load', () => {
   const ind = document.getElementById('gs-ind');
   if(ind){
     ind.className = fbOk ? 'gs-on gs-s' : 'gs-on';
-    ind.textContent = fbOk ? '🔥 Firebase ✓ v37' : '🔥 Firebase (local) v37';
+    ind.textContent = fbOk ? '🔥 Firebase ✓ v38' : '🔥 Firebase (local) v38';
   }
 });
 </script>
